@@ -31,5 +31,6 @@ export interface BuildRecommendation {
   items: BuildItem[]; // perks/abilities/items
   whyItWorksNow: string;
   confidence: "data-backed" | "community-consensus";
+  pobCode?: string; // raw base64 Path of Building export, when the source provides one
   leagueMode?: "current" | "standard" | "hardcore";
 }

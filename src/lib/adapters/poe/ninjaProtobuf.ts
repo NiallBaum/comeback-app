@@ -245,3 +245,13 @@ export function decodeSearchResult(buf: Buffer): DecodedSearchResult {
     dictionaryRefs,
   };
 }
+
+export function parseDpsString(str: string | undefined) : number {
+  if (!str) return 0
+  const match = str.match(/^([\d.]+)([kMB]?)$/);
+  if (!match) return 0
+  const [, numStr, suffix] = match
+  const multiplier: Record<string, number> = { k: 1e3, M: 1e6, B: 1e9 };
+
+  return parseFloat(numStr) * (multiplier[suffix] ?? 1);
+}

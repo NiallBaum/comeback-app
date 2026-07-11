@@ -32,5 +32,5 @@ export interface BuildRecommendation {
   whyItWorksNow: string;
   confidence: "data-backed" | "community-consensus";
   pobCode?: string; // raw base64 Path of Building export, when the source provides one
-  leagueMode?: "current" | "standard" | "hardcore";
+  leagueMode?: string; // poe.ninja's own league displayName, e.g. "Mirage", "Hardcore Ancestors", "Standard"
 }

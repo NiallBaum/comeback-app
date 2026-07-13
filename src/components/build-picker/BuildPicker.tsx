@@ -5,6 +5,8 @@ import type { BuildRecommendation } from "@/types";
 import { BuildCard } from "./BuildCard";
 import { AnimatePresence, motion } from "framer-motion";
 import { getSteamHeaderUrl } from "@/lib/steam/assets";
+import { Card, CardContent } from "@/components/ui/card";
+import { SwordIcon } from "lucide-react";
 import { 
   Tabs,
   TabsList,
@@ -28,15 +30,29 @@ interface BuildPickerProps {
 // Motion handles tab-switch and card entrance transitions.
 export function BuildPicker({ builds }: BuildPickerProps) {
   const [leagueMode, setLeagueMode] = useState<string | undefined>();
-  
+
   const leagueModes = [...new Set(builds.map(b => b.leagueMode).filter(Boolean))]
-  
+
   const visibleBuilds = leagueModes.length > 1 ? builds.filter((b) => b.leagueMode === (leagueMode ?? leagueModes[0])) : builds
-  
+
   const [activeTab, setActiveTab] = useState(visibleBuilds[0]?.characterOrClass);
   useEffect(() => {
     setActiveTab(visibleBuilds[0]?.characterOrClass);
   }, [leagueMode]);
+
+  if (builds.length === 0) {
+    return (
+      <Card>
+        <CardContent className="flex flex-col items-center gap-2 py-10 text-center">
+          <SwordIcon className="size-6 text-muted-foreground" />
+          <p className="font-medium">No build recommendations right now</p>
+          <p className="text-sm text-muted-foreground">
+            The data source is temporarily unavailable — try refreshing in a bit.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const headerUrl = getSteamHeaderUrl(builds[0].gameId)
 

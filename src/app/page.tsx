@@ -1,10 +1,12 @@
-import { mockDbdBuilds } from "@/lib/mock/builds";
+import { poeAdapter } from "@/lib/adapters/poe";
 import { BuildPicker } from "@/components/build-picker/BuildPicker";
 
-export default function Home() {
+export default async function Home() {
+  const builds = await poeAdapter.fetchRecommendedBuilds()
+
   return (
     <div className="max-w-[900px] w-full mx-auto px-4 py-8">
-      <BuildPicker builds={mockDbdBuilds} />
+      <BuildPicker builds={builds} />
     </div>
   );
 }

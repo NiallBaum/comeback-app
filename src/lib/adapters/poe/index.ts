@@ -77,6 +77,7 @@ function getOverviewName(league: PoeLeague): string {
 async function getBuildTargets(): Promise<BuildTargetsResult> {
   const response = await fetch("https://poe.ninja/poe1/api/data/build-index-state", {
     headers: { "User-Agent": BROWSER_USER_AGENT },
+    cache: "no-store",
   });
   const data: { leagueBuilds: BuildIndexLeague[] } = await response.json();
 
@@ -112,7 +113,7 @@ async function getTopCharacters(league: PoeLeague, count: number): Promise<TopCh
   url.searchParams.set("overview", getOverviewName(league));
   url.searchParams.set("type", "exp");
 
-  const response = await fetch(url, { headers: { "User-Agent": BROWSER_USER_AGENT } });
+  const response = await fetch(url, { headers: { "User-Agent": BROWSER_USER_AGENT }, cache: "no-store" });
   const buf = Buffer.from(await response.arrayBuffer());
   const result = decodeSearchResult(buf);
 
@@ -138,7 +139,7 @@ async function findTopCharacter(target: BuildTarget): Promise<TopCharacter | nul
   url.searchParams.set("overview", getOverviewName(target.league));
   url.searchParams.set("type", "exp");
 
-  const response = await fetch(url, { headers: { "User-Agent": BROWSER_USER_AGENT } });
+  const response = await fetch(url, { headers: { "User-Agent": BROWSER_USER_AGENT }, cache: "no-store" });
   const buf = Buffer.from(await response.arrayBuffer());
   const result = decodeSearchResult(buf);
 
@@ -169,7 +170,7 @@ async function getCharacterBuild(league: PoeLeague, character: TopCharacter): Pr
   url.searchParams.set("type", "0");
   url.searchParams.set("timeMachine", "");
 
-  const response = await fetch(url, { headers: { "User-Agent": BROWSER_USER_AGENT } });
+  const response = await fetch(url, { headers: { "User-Agent": BROWSER_USER_AGENT }, cache: "no-store" });
   if (!response.ok) return null;
   return response.json();
 }
@@ -197,6 +198,7 @@ export const poeAdapter: GameAdapter = {
   async fetchPatchNotes(sinceDate) {
     const listResponse = await fetch("https://www.pathofexile.com/forum/view-forum/patch-notes", {
       headers: { "User-Agent": BROWSER_USER_AGENT },
+      cache: "no-store",
     });
     const listHtml = await listResponse.text();
     const $ = cheerio.load(listHtml);
@@ -220,6 +222,7 @@ export const poeAdapter: GameAdapter = {
     for (const thread of recentThreads) {
       const threadResponse = await fetch(`https://www.pathofexile.com${thread.url}`, {
         headers: { "User-Agent": BROWSER_USER_AGENT },
+        cache: "no-store",
       });
       const threadHtml = await threadResponse.text();
       const $$ = cheerio.load(threadHtml);

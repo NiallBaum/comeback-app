@@ -46,9 +46,9 @@ export function BuildCard({ build }: BuildCardProps) {
           initial="hidden"
           animate="visible"
         >
-          {build.items.map((item) => (
+          {build.items.map((item, index) => (
             <motion.li
-              key={item.name}
+              key={`${item.name}-${index}`}
               variants={itemVariants}
               className="flex items-center gap-1.5 rounded-full border border-border bg-muted py-1 pr-3 pl-1 text-xs font-medium"
             >

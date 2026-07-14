@@ -89,14 +89,13 @@ export function BuildPicker({ builds }: BuildPickerProps) {
           <AnimatePresence mode="popLayout">
             {visibleBuilds.map((build) => (
               <motion.div
-                key={build.characterOrClass}
-                layout
+                key={`${build.characterOrClass}-${build.label}`}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
               >
-                <TabsTrigger value={build.characterOrClass}>
+                <TabsTrigger value={`${build.characterOrClass}-${build.label}`}>
                   {build.characterOrClass}
                 </TabsTrigger>
               </motion.div>
@@ -105,7 +104,7 @@ export function BuildPicker({ builds }: BuildPickerProps) {
         </TabsList>
 
         {visibleBuilds.map((build) => (
-          <TabsContent key={build.characterOrClass} value={build.characterOrClass}>
+          <TabsContent key={`${build.characterOrClass}-${build.label}`} value={`${build.characterOrClass}-${build.label}`}>
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}

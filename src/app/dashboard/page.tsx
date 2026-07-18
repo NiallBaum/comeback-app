@@ -5,6 +5,10 @@ import { getOwnedGames } from "@/lib/steam/client";
 import { SUPPORTED_GAMES } from "@/lib/games"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { getSteamHeaderUrl } from "@/lib/steam/assets";
+import { getBuildsWithCache } from "@/lib/cache/builds";
+import { poeAdapter } from "@/lib/adapters/poe";
+import { BuildPicker } from "@/components/build-picker/BuildPicker";
+
 
 export default async function DashboardPage() {
   const cookieStore = await cookies()
@@ -54,6 +58,9 @@ return (
           </CardContent>
         </Card>
       ))}
+    </div>
+    <div className="max-w-[900px] mx-auto mt-8">
+      <BuildPicker builds={await getBuildsWithCache(poeAdapter)} />
     </div>
   </main>
 );

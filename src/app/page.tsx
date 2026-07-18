@@ -1,13 +1,10 @@
-import { getBuildsWithCache } from "@/lib/cache/builds";
-import { poeAdapter } from "@/lib/adapters/poe";
-import { BuildPicker } from "@/components/build-picker/BuildPicker";
+import { Hero } from "@/components/homepage/Hero";
 
-export default async function Home() {
-  const builds = await getBuildsWithCache(poeAdapter);
+export default function Home() {
 
   return (
-    <div className="max-w-[900px] w-full mx-auto px-4 py-8">
-      <BuildPicker builds={builds} />
+    <div className="max-w-[1440px] w-full mx-auto px-4 py-8">
+      <Hero />
     </div>
   );
 }

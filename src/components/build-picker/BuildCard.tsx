@@ -1,5 +1,10 @@
+"use client"
+
+import { useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { ClipboardIcon, ClipboardCheckIcon } from "lucide-react";
 import type { BuildRecommendation } from "@/types";
-import { Card, CardHeader, CardTitle, CardAction, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardAction, CardContent, CardFooter } from "@/components/ui/card";
 import { motion } from "framer-motion"
 
 interface BuildCardProps {
@@ -8,6 +13,20 @@ interface BuildCardProps {
 
 export function BuildCard({ build }: BuildCardProps) {
   const isDataBacked = build.confidence === "data-backed";
+  const [copied, setCopied] = useState(false);
+  const copiedTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  useEffect(() => {
+    return () => clearTimeout(copiedTimeout.current);
+  }, []);
+
+  async function handleCopyPob() {
+    if (!build.pobCode) return;
+    await navigator.clipboard.writeText(build.pobCode);
+    setCopied(true);
+    clearTimeout(copiedTimeout.current);
+    copiedTimeout.current = setTimeout(() => setCopied(false), 2000);
+  }
 
   const listVariants = {
     hidden: {},
@@ -63,6 +82,14 @@ export function BuildCard({ build }: BuildCardProps) {
           {build.whyItWorksNow}
         </p>
       </CardContent>
+      {build.pobCode && (
+        <CardFooter>
+          <Button variant="outline" size="sm" onClick={handleCopyPob}>
+            {copied ? <ClipboardCheckIcon /> : <ClipboardIcon />}
+            <span className="leading-none translate-y-[2px]">{copied ? "Copied" : "Copy PoB Code"}</span>
+          </Button>
+        </CardFooter>
+      )}
     </Card>
   );
 }

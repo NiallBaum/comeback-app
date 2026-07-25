@@ -34,6 +34,8 @@
   --color-brand-foreground: var(--brand-foreground);
   --color-add: var(--add);
   --animate-chevron-slide: chevron-slide 0.45s ease-in-out;
+  --animate-reveal: reveal 0.5s ease forwards;
+  --animate-cta-blink: cta-blink 1s steps(1) infinite;
   --color-muted-foreground: var(--muted-foreground);
   --color-muted: var(--muted);
   --color-secondary-foreground: var(--secondary-foreground);

@@ -2,8 +2,7 @@ import Link from "next/link";
 import { Logo } from "@/components/layout/Logo";
 
 const FOOTER_LINKS = [
-  { href: "/#how-it-works", label: "How it works" },
-  { href: "/#supported-games", label: "Supported games" },
+  { href: "/#games", label: "Games" },
   { href: "/dashboard", label: "Dashboard" },
 ];
 

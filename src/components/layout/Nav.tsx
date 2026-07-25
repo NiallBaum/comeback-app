@@ -4,10 +4,7 @@ import { SESSION_COOKIE_NAME, verifySession } from "@/lib/steam/session";
 import { buttonVariants } from "@/components/ui/button";
 import { Logo } from "@/components/layout/Logo";
 
-const SECTION_LINKS = [
-  { href: "/#how-it-works", label: "How it works" },
-  { href: "/#supported-games", label: "Supported games" },
-];
+const SECTION_LINKS = [{ href: "/#games", label: "Games" }];
 
 export async function Nav() {
   const cookieStore = await cookies();

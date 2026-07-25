@@ -1,46 +1,69 @@
-import Link from "next/link";
-import { buttonVariants } from "@/components/ui/button";
-import { getSteamHeaderUrl } from "@/lib/steam/assets";
-import type { GameId } from "@/types";
+import { CtaButton } from "@/components/homepage/CtaButton";
+import { SUPPORTED_GAMES } from "@/lib/games";
+import { mockPoeBuilds, mockDota2Builds } from "@/lib/mock/builds";
 
+const TRANSCRIPT = [
+  { cmd: "$ comeback sync --steam", ok: `247 games, ${SUPPORTED_GAMES.length} supported`, delay: "0.05s" },
+  { cmd: "$ comeback diff --since=214d", ok: "12 changes found", delay: "0.2s" },
+  { cmd: "$ comeback recommend", ok: "1 build ready", delay: "0.35s" },
+];
+
+const DIFF_LINES = [mockPoeBuilds[0].whyItWorksNow, mockDota2Builds[0].whyItWorksNow];
+
+function SampleBriefingPanel() {
+  return (
+    <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+      <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
+        <span className="font-mono text-xs text-muted-foreground">sample_briefing.log</span>
+        <div className="flex gap-1.5">
+          <span className="size-1.5 rounded-full bg-border" />
+          <span className="size-1.5 rounded-full bg-border" />
+          <span className="size-1.5 rounded-full bg-border" />
+        </div>
+      </div>
+      <div className="px-5 py-4 font-mono text-sm">
+        {TRANSCRIPT.map((row) => (
+          <div
+            key={row.cmd}
+            className="animate-reveal flex gap-3 py-1 text-muted-foreground opacity-0"
+            style={{ animationDelay: row.delay, animationFillMode: "forwards" }}
+          >
+            <span className="text-foreground">{row.cmd}</span>
+            <span className="ml-auto whitespace-nowrap text-add">{row.ok}</span>
+          </div>
+        ))}
+        <div className="my-3 h-px bg-border" />
+        <div className="flex flex-col gap-1">
+          {DIFF_LINES.map((line) => (
+            <div key={line} className="text-add before:content-['+_']">
+              {line}
+            </div>
+          ))}
+        </div>
+        <div className="mt-4 flex items-center gap-2 border-t border-border pt-3 text-foreground before:size-1.5 before:rounded-full before:bg-add before:content-['']">
+          ready to jump back in
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function Hero() {
   return (
-    <section className="grid grid-cols-1 md:grid-cols-2 items-center gap-10 py-16">
-      <div className="flex flex-col items-start gap-4">
-        <span className="font-mono uppercase tracking-wide text-xs text-brand">
-          Welcome back
+    <section className="grid grid-cols-1 items-start gap-10 py-16 md:grid-cols-2 md:gap-14">
+      <div>
+        <span className="flex items-center gap-2 font-mono text-xs uppercase tracking-wide text-brand before:size-1.5 before:rounded-full before:bg-brand before:content-['']">
+          214 days since your last session
         </span>
-        <h1 className="text-4xl font-semibold tracking-tight text-balance">
-          Welcome back. Here&rsquo;s what you missed.
+        <h1 className="mt-2 mb-4 text-4xl font-bold tracking-tight text-balance md:text-5xl">
+          You left. The meta didn&rsquo;t.
         </h1>
-        <p className="max-w-prose text-muted-foreground">
-          Connect Steam and Comeback checks what changed in the games you&rsquo;ve left behind — then tells you exactly what to play when you jump back in.
+        <p className="mb-8 max-w-[34ch] text-muted-foreground">
+          Connect Steam and Comeback reads back everything that changed in the games you dropped &mdash; then hands you a build that already accounts for it.
         </p>
-        <Link
-          href="/api/auth/steam/login"
-          className={buttonVariants({ size: "lg", className: "mt-2 bg-brand text-brand-foreground hover:bg-brand/90" })}
-        >
-          Connect Steam
-        </Link>
+        <CtaButton href="/api/auth/steam/login">connect_steam</CtaButton>
       </div>
-      <div className="relative w-[32rem] mx-auto h-56 flex items-center align-middle justify-center">
-        {(["dbd", "dota2", "poe"] as GameId[]).map((gameId, index) => {
-          const positions = [
-            "left-0 top-8 -rotate-6 z-0",
-            "left-24 top-0 rotate-2 z-10",
-            "left-48 top-10 rotate-6 z-20",
-          ];
-          return (
-            <img
-              key={gameId}
-              src={getSteamHeaderUrl(gameId)}
-              alt=""
-              className={`absolute w-80 aspect-[16/9] rounded-lg border border-border object-cover shadow-xl ${positions[index]}`}
-            />
-          );
-        })}
-      </div>
+      <SampleBriefingPanel />
     </section>
   );
 }

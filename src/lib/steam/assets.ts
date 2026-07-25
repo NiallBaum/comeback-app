@@ -2,7 +2,7 @@ import type { GameId } from "@/types";
 
 export const STEAM_APPIDS: Record<GameId, number> = {
   'dbd' : 381210,
-  'destiny2' : 1085660,
+  'dota2' : 570,
   'poe' : 238960
 }
 

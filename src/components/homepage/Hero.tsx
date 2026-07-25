@@ -25,7 +25,7 @@ export function Hero() {
         </Link>
       </div>
       <div className="relative w-[32rem] mx-auto h-56 flex items-center align-middle justify-center">
-        {(["dbd", "destiny2", "poe"] as GameId[]).map((gameId, index) => {
+        {(["dbd", "dota2", "poe"] as GameId[]).map((gameId, index) => {
           const positions = [
             "left-0 top-8 -rotate-6 z-0",
             "left-24 top-0 rotate-2 z-10",

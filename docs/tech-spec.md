@@ -22,12 +22,22 @@ should I jump back in and how" moment.
 | Game | Genre | Why it fits |
 |---|---|---|
 | Dead by Daylight | Asymmetric horror | Frequent balance patches, strong meta shifts, personal test case |
-| Destiny 2 | Looter-shooter | Seasonal resets, well-known "returning player" pain point in community |
+| Dota 2 | MOBA | Frequent balance patches, huge established playerbase, real public stats API (OpenDota) |
 | Path of Exile (1 or 2) | ARPG | Leagues reset ~every 3 months, arguably the single best-fit game for this idea |
 
 Each game will need its own ingestion adapter (see Section 4) since patch note
 formats and meta-data sources differ per title. Do not try to generalize to
 "any Steam game" for v1 — that's a v2+ problem once the pipeline is proven.
+
+**Update (2026-07-25): Destiny 2 swapped for Dota 2.** Destiny 2 hit end of live
+service on 2026-06-09 (final-ever hotfix 2026-07-07) — Bungie has moved on to a
+different title and confirmed no Destiny 3. That kills the "what's changed
+since you last played" premise for D2 going forward (nothing will change,
+ever), so it was swapped for Dota 2 before any adapter work began. Bonus: Dota
+2 also has a genuinely public/documented stats API (OpenDota) rather than
+Bungie's official-but-narrower one, and needs zero scraping for patch notes —
+Steam's own `ISteamNews/GetNewsForApp` tags real Valve balance patches with
+`"patchnotes"` in their `tags` array, verified live against 20 real entries.
 
 ## 3. User Flow (MVP)
 
@@ -53,8 +63,9 @@ formats and meta-data sources differ per title. Do not try to generalize to
 
 ### 4.2 Patch Notes / Content History (per game, separate adapters)
 - **Dead by Daylight**: Behaviour Interactive's official patch notes / Steam news feed
-- **Destiny 2**: Bungie.net API and/or official patch note pages (Bungie has a
-  public API — worth checking scope/rate limits before building)
+- **Dota 2**: Steam's `ISteamNews/GetNewsForApp` (appid 570) — no scraping,
+  filter to entries whose `tags` array includes `"patchnotes"` to exclude
+  third-party press posts
 - **Path of Exile**: GGG's official patch notes / league announcement pages
 
 Each adapter's job: pull structured (or semi-structured) patch entries with dates,
@@ -84,7 +95,7 @@ open question from the earlier draft:
 | Game | Best source | Access method | Data quality |
 |---|---|---|---|
 | **Path of Exile** | **poe.ninja** | Public API/JSON endpoints, well-established, widely used by the community already | Strongest option — real ladder data (actual build popularity from real characters), not opinion |
-| **Destiny 2** | **Bungie's official API** (stats/activity data) + **light.gg** (weapon/perk popularity, trusted by 40M+ players) | Bungie API is public and documented; light.gg has no public API found — would need scraping or manual reference | Good — official API gives legitimate player data; popularity layer is semi-manual |
+| **Dota 2** | **OpenDota** (docs.opendota.com) | Genuinely public, documented REST API — hero/item win rates, pick rates, meta rankings; free tier (50k calls/month, 60/min), API key just needs a Steam login | Strong — real match data at scale, officially supported for third-party use (unlike poe.ninja's undocumented API) |
 | **Dead by Daylight** | No equivalent exists | Entirely blog/tier-list sites (PCGamesN, propelrc, Otzdarva's community tierlists) | Weakest — opinion-based rankings only, no real usage data, no API |
 
 **Practical implication per game:**
@@ -92,8 +103,9 @@ open question from the earlier draft:
 - **PoE** — build this one first/best. Real data means genuinely trustworthy
   recommendations, and it's the closest fit to the original "here's what's
   actually strong right now" pitch.
-- **Destiny 2** — workable. Combine Bungie API stats with periodic manual
-  reference to community popularity sources for the "what's fun/popular" layer.
+- **Dota 2** — build this one second. OpenDota's real match data means
+  genuinely trustworthy recommendations, similar in spirit to PoE's approach,
+  and Steam's own News API covers patch notes with no scraping at all.
 - **DBD** — the weak link, and worth being upfront about internally and possibly
   in-product. Realistic approach: have the AI synthesize a recommendation from
   current patch notes plus a small set of trusted tier-list sources treated as
@@ -104,7 +116,7 @@ open question from the earlier draft:
 
 This difference in data quality across the 3 launch games is a reasonable
 argument for building PoE's pipeline first as the proof of concept, then
-Destiny 2, then DBD last — inverse of the original "DBD first since you can
+Dota 2, then DBD last — inverse of the original "DBD first since you can
 self-test" suggestion. Worth weighing both factors (data quality vs. personal
 testability) when deciding actual build order.
 
@@ -167,7 +179,7 @@ interactive picker:
   perceived-polish payoff
 
 This pattern is reusable across all 3 launch games with the same component,
-just swapping data: killers/perks (DBD), subclasses/loadouts (Destiny 2),
+just swapping data: killers/perks (DBD), hero item builds (Dota 2),
 ascendancies/builds (PoE). The component logic is shared; only the `builds`
 data per game differs.
 
@@ -178,7 +190,7 @@ UI to reflect this honestly (e.g. a "data-backed" indicator for PoE vs.
 ## 7. MVP Definition of Done
 
 - Steam login works
-- User can select from DBD / Destiny 2 / PoE (only games they own, and only if
+- User can select from DBD / Dota 2 / PoE (only games they own, and only if
   they've played before)
 - User confirms approximate last-played date
 - App generates and displays:
@@ -207,7 +219,7 @@ user's whole Steam library, not just the 3 supported titles.
 - A "Play" action launches the game directly via Steam's `steam://run/<appid>`
   protocol handler.
 - **The tie-in that makes this worth doing**: if the recommended game is one
-  of the 3 supported titles (DBD/Destiny 2/PoE) and the user hasn't played it
+  of the 3 supported titles (DBD/Dota 2/PoE) and the user hasn't played it
   recently, route them into the existing "what's changed" briefing flow
   before/instead of just launching the game — this turns the recommender into
   a funnel back into the app's core feature rather than a standalone dead end.
@@ -244,9 +256,10 @@ kept here for future reference rather than re-researching from scratch later.
   trusted within that community, but it's a planning tool for players who
   already know what they want to build, not a "what should I do" discovery
   tool for lapsed players.
-- **Official Destiny 2 Companion app** — Bungie's own app for checking
-  inventory/vendors/stats. Useful for active players, but doesn't address the
-  "I've been gone a while, what changed and what's good now" moment at all.
+- **Dotabuff** — Dota 2's most popular stats site (win rates, meta reports,
+  match history). Like poe.ninja, it's a raw stats product, not a briefing or
+  personalization tool — no synthesis, no "what changed," no returning-player
+  angle.
 
 **Conclusion from that research pass**: no direct 1:1 competitor exists for
 this specific combination — ownership-aware (via Steam login), cross-game,
@@ -256,6 +269,28 @@ cover one slice (aesthetic, single-game returning-player UX, build content,
 raw data, or planning) but not the combination. This was the basis for judging
 the idea still viable rather than redundant with existing tools.
 
+## 8d. Noted Future Features (v2+): Polish Ideas
+
+Surfaced during a brainstorm session (2026-07-25), same treatment as 8b — recorded
+so they aren't lost, explicitly **not** to be built before the 3-game MVP
+(PoE done, Dota 2 in progress, DBD pending) is validated:
+
+- **Personalized per-hero/build deep-dives** — rather than a generic top-5 meta
+  list, use a player's own history (OpenDota supports per-player hero stats for
+  Dota 2) to lead with "you mained X — here's what changed for X specifically."
+  Biggest expected impact of this list; also the natural fit for the parked
+  premium-tier idea (per-hero analysis depth as the paid differentiator, whole-
+  library as secondary) if monetization gets revisited later.
+- **Small stat charts on build/recommendation cards** — win-rate/pick-rate
+  trend sparklines instead of plain text, using real numbers we already have
+  for PoE/Dota. Makes cards read as a data product rather than a text blob.
+- **Shareable "Welcome Back" recap card** — Spotify-Wrapped-style generated
+  image (playtime, what changed, top build) for sharing/downloading. Cheap to
+  build, doubles as organic marketing given the brand mark already exists.
+- **Opt-in re-engagement notifications** — email/push when a new season/patch
+  drops for an owned-but-dormant game, turning the app from a one-off check
+  into a habit loop.
+
 ## 9. Suggested Next Steps
 
 1. Build the Steam auth + library pull first (fastest to prove out, no per-game work)
@@ -264,6 +299,6 @@ the idea still viable rather than redundant with existing tools.
    most trustworthy of the three (see Section 4.4)
 3. Validate with real users once PoE works end-to-end (Reddit gut-check, e.g.
    r/pathofexile) before investing in the other two adapters
-4. Build Destiny 2 next (Bungie API + light.gg-style reference), then DBD last,
-   being upfront in the UI about DBD's weaker data backing (community
-   consensus rather than usage data)
+4. Build Dota 2 next (Steam News API for patch notes + OpenDota for meta),
+   then DBD last, being upfront in the UI about DBD's weaker data backing
+   (community consensus rather than usage data)

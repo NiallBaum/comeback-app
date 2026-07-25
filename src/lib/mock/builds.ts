@@ -1,7 +1,7 @@
 import type { BuildRecommendation } from "@/types";
 
 // Dummy data for UI development. Replace with real per-game ingestion
-// (poe.ninja, Bungie API, DBD tier-list synthesis — see docs/tech-spec.md
+// (poe.ninja, OpenDota, DBD tier-list synthesis — see docs/tech-spec.md
 // section 4.4) once each adapter exists.
 
 export const mockPoeBuilds: BuildRecommendation[] = [
@@ -35,32 +35,32 @@ export const mockPoeBuilds: BuildRecommendation[] = [
   },
 ];
 
-export const mockDestiny2Builds: BuildRecommendation[] = [
+export const mockDota2Builds: BuildRecommendation[] = [
   {
-    gameId: "destiny2",
-    characterOrClass: "Warlock — Prismatic",
-    label: "Song of Flame Support",
+    gameId: "dota2",
+    characterOrClass: "Faceless Void",
+    label: "Battle Fury Carry",
     items: [
-      { name: "Starfire Protocol" },
-      { name: "Song of Flame" },
-      { name: "Well of Radiance" },
-      { name: "Speaker's Sight" },
+      { name: "Battle Fury" },
+      { name: "Black King Bar" },
+      { name: "Butterfly" },
+      { name: "Chronosphere" },
     ],
-    whyItWorksNow: "Strong in this season's endgame activity per Bungie API activity stats.",
+    whyItWorksNow: "High win rate at this bracket per OpenDota's current patch stats.",
     confidence: "data-backed",
   },
   {
-    gameId: "destiny2",
-    characterOrClass: "Titan — Arc",
-    label: "Thundercrash Burst",
+    gameId: "dota2",
+    characterOrClass: "Invoker",
+    label: "Quas-Wex Midlane",
     items: [
-      { name: "Thundercrash" },
-      { name: "Cuirass of the Falling Star" },
-      { name: "Storm's Keep" },
-      { name: "Ballistic Slam" },
+      { name: "Aghanim's Scepter" },
+      { name: "Kaya and Sange" },
+      { name: "Aether Lens" },
+      { name: "Octarine Core" },
     ],
-    whyItWorksNow: "Consistently referenced in community popularity round-ups this season.",
-    confidence: "community-consensus",
+    whyItWorksNow: "Consistently high pick/win rate across recent pro and pub matches.",
+    confidence: "data-backed",
   },
 ];
 

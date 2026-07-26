@@ -6,5 +6,8 @@ import type { BuildRecommendation, GameId, PatchEntry } from "@/types";
 export interface GameAdapter {
   gameId: GameId;
   fetchPatchNotes(sinceDate: string): Promise<PatchEntry[]>;
-  fetchRecommendedBuilds(): Promise<BuildRecommendation[]>;
+  // heroName selects a single character/class to build a recommendation for
+  // (a player's "main" or a manually picked one) instead of the default
+  // top-N-by-meta list. Optional — existing callers/adapters are unaffected.
+  fetchRecommendedBuilds(heroName?: string): Promise<BuildRecommendation[]>;
 }

@@ -7,6 +7,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { getSteamHeaderUrl } from "@/lib/steam/assets";
 import { getBuildsWithCache } from "@/lib/cache/builds";
 import { poeAdapter } from "@/lib/adapters/poe";
+import { dota2Adapter } from "@/lib/adapters/dota2";
 import { BuildPicker } from "@/components/build-picker/BuildPicker";
 
 
@@ -59,8 +60,9 @@ return (
         </Card>
       ))}
     </div>
-    <div className="max-w-[900px] mx-auto mt-8">
+    <div className="max-w-[900px] mx-auto mt-8 flex flex-col gap-8">
       <BuildPicker builds={await getBuildsWithCache(poeAdapter)} />
+      <BuildPicker builds={await getBuildsWithCache(dota2Adapter)} />
     </div>
   </main>
 );

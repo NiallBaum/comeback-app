@@ -16,7 +16,7 @@ interface SteamNewsResponse {
   }
 }
 
-interface HeroStat {
+export interface HeroStat {
   id: number;
   localized_name: string;
   icon: string;
@@ -29,6 +29,10 @@ interface ItemMeta {
   img: string;
 }
 
+export async function getHeroStats(): Promise<HeroStat[]> {
+    const results = await fetch("https://api.opendota.com/api/heroStats");
+    return results.json();
+}
 
 
 export const dota2Adapter: GameAdapter = {
@@ -54,10 +58,10 @@ export const dota2Adapter: GameAdapter = {
     }));
 
   },
-  async fetchRecommendedBuilds(heroName) {
-    const results = await fetch("https://api.opendota.com/api/heroStats");
 
-    const heroStats: HeroStat[] = await results.json();
+  async fetchRecommendedBuilds(heroName) {
+    const heroStats = await getHeroStats();
+
     const meaningfulStats = heroStats.filter((hero) => hero.pub_pick >= 1000);
     let chosenHeroes: HeroStat[]
 

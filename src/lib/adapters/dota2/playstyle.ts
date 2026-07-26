@@ -16,7 +16,7 @@ interface TotalsField {
   sum: number;
 }
 
-export async function getPlaystyleProfile(steamId64: string, heroName: string) {
+export async function getPlaystyleProfile(steamId64: string, heroName: string): Promise<PlaystyleProfile> {
   const steam32 = steam64ToSteam32(steamId64);
   const heroStats = await getHeroStats();
   const hero = heroStats.find(
@@ -28,5 +28,20 @@ export async function getPlaystyleProfile(steamId64: string, heroName: string) {
 
   const results = await fetch(`https://api.opendota.com/api/players/${steam32}/totals?hero_id=${hero.id}`)
 
+  const totals: TotalsField[] = await results.json();
 
+  function average(field: string): number {
+    const entry = totals.find((t) => t.field === field);
+    if (!entry || entry.n === 0) return 0;
+    return entry.sum / entry.n;
+  }
+
+  return {
+    goldPerMin: average("gold_per_min"),
+    xpPerMin: average("xp_per_min"),
+    heroDamage: average("hero_damage"),
+    heroHealing: average("hero_healing"),
+    wardsPlaced: average("purchase_ward_observer"),
+    kda: average("kda"),
+  };
 }

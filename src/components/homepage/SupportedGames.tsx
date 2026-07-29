@@ -1,6 +1,6 @@
 import { SUPPORTED_GAMES } from "@/lib/games";
 import { getSteamHeaderUrl } from "@/lib/steam/assets";
-import { mockPoeBuilds, mockDota2Builds, mockDbdBuilds } from "@/lib/mock/builds";
+import { mockPoeBuilds, mockDota2Builds, mockCs2Builds } from "@/lib/mock/builds";
 import type { BuildRecommendation, GameId } from "@/types";
 
 function abbreviate(name: string) {
@@ -35,13 +35,13 @@ const SHOWCASE: Array<{
     build: mockDota2Builds[0],
   },
   {
-    id: "dbd",
-    tag: "Asymmetric horror",
-    tagColor: "text-[#b1585a]",
-    heading: "Honest about what we don't know",
-    diffline: mockDbdBuilds[0].whyItWorksNow,
+    id: "cs2",
+    tag: "Tactical shooter",
+    tagColor: "text-[#d99a3f]",
+    heading: "No builds to fake here",
+    diffline: mockCs2Builds[0].whyItWorksNow,
     neutral: true,
-    build: mockDbdBuilds[0],
+    build: mockCs2Builds[0],
   },
 ];
 
@@ -91,21 +91,23 @@ export function SupportedGames() {
                       {isDataBacked ? "DATA-BACKED" : "COMMUNITY"}
                     </span>
                   </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {entry.build.items.map((item) => (
-                      <div
-                        key={item.name}
-                        title={item.name}
-                        className="flex size-8 items-center justify-center border border-border bg-background font-mono text-[0.6rem] text-muted-foreground"
-                      >
-                        {item.iconUrl ? (
-                          <img src={item.iconUrl} alt={item.name} className="size-full object-cover" />
-                        ) : (
-                          abbreviate(item.name)
-                        )}
-                      </div>
-                    ))}
-                  </div>
+                  {entry.build.items.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {entry.build.items.map((item) => (
+                        <div
+                          key={item.name}
+                          title={item.name}
+                          className="flex size-8 items-center justify-center border border-border bg-background font-mono text-[0.6rem] text-muted-foreground"
+                        >
+                          {item.iconUrl ? (
+                            <img src={item.iconUrl} alt={item.name} className="size-full object-cover" />
+                          ) : (
+                            abbreviate(item.name)
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

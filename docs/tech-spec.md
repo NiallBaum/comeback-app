@@ -21,7 +21,7 @@ should I jump back in and how" moment.
 
 | Game | Genre | Why it fits |
 |---|---|---|
-| Dead by Daylight | Asymmetric horror | Frequent balance patches, strong meta shifts, personal test case |
+| Counter-Strike 2 | Tactical shooter | Frequent patches, one of the largest Steam playerbases; patch-notes only, see 2026-07-27 update below |
 | Dota 2 | MOBA | Frequent balance patches, huge established playerbase, real public stats API (OpenDota) |
 | Path of Exile (1 or 2) | ARPG | Leagues reset ~every 3 months, arguably the single best-fit game for this idea |
 
@@ -38,6 +38,20 @@ ever), so it was swapped for Dota 2 before any adapter work began. Bonus: Dota
 Bungie's official-but-narrower one, and needs zero scraping for patch notes —
 Steam's own `ISteamNews/GetNewsForApp` tags real Valve balance patches with
 `"patchnotes"` in their `tags` array, verified live against 20 real entries.
+
+**Update (2026-07-27): DBD parked, CS2 in — but scoped to patch notes only, no
+builds/meta section.** DBD was always the weakest data source (Section 4.4) —
+opinion tier-lists only, no real usage data. Rather than build a third
+"community consensus" section, checked the user's own top-5 Steam games by
+playtime live (CS2 1586h, DBD 869h, Rocket League 606h, ARK 419h, GTA V 249h)
+to find a replacement — none of them (besides now-parked DBD) have a
+documented build/loadout meta API either. Decided against reaching for an
+unfamiliar game (Warframe/TF2 were considered — genuinely good APIs, but the
+user doesn't play either) just to fill a "builds" slot. **CS2 is the 3rd game,
+patch-notes only** — its `fetchRecommendedBuilds` returns an empty array by
+contract (Section 4/6 below), no fake or opinion-based build content, since
+CS2 genuinely has no item/loadout meta concept the way PoE/Dota do. Patch
+notes reuse the same `ISteamNews`/`GetNewsForApp` pattern as Dota 2 (appid 730).
 
 ## 3. User Flow (MVP)
 
@@ -62,7 +76,8 @@ Steam's own `ISteamNews/GetNewsForApp` tags real Valve balance patches with
   Steam OpenID (no key exposure to end users)
 
 ### 4.2 Patch Notes / Content History (per game, separate adapters)
-- **Dead by Daylight**: Behaviour Interactive's official patch notes / Steam news feed
+- **Counter-Strike 2**: Steam's `ISteamNews/GetNewsForApp` (appid 730) — same
+  pattern as Dota 2, no scraping
 - **Dota 2**: Steam's `ISteamNews/GetNewsForApp` (appid 570) — no scraping,
   filter to entries whose `tags` array includes `"patchnotes"` to exclude
   third-party press posts
@@ -84,8 +99,8 @@ normalize into a common internal schema:
 ### 4.3 Meta / Popularity Data (for recommendations)
 This is a new data need beyond the original patch-digest idea. See Section 4.4
 below for the resolved research on best sources per game — data quality varies
-significantly by title (PoE has real ladder data via poe.ninja; DBD has no
-equivalent and relies on opinion-based tier lists).
+significantly by title (PoE has real ladder data via poe.ninja; CS2 has no
+build/loadout concept at all, so it skips this section entirely).
 
 ## 4.4 Meta/Build Data Sources (resolved)
 
@@ -96,7 +111,7 @@ open question from the earlier draft:
 |---|---|---|---|
 | **Path of Exile** | **poe.ninja** | Public API/JSON endpoints, well-established, widely used by the community already | Strongest option — real ladder data (actual build popularity from real characters), not opinion |
 | **Dota 2** | **OpenDota** (docs.opendota.com) | Genuinely public, documented REST API — hero/item win rates, pick rates, meta rankings; free tier (50k calls/month, 60/min), API key just needs a Steam login | Strong — real match data at scale, officially supported for third-party use (unlike poe.ninja's undocumented API) |
-| **Dead by Daylight** | No equivalent exists | Entirely blog/tier-list sites (PCGamesN, propelrc, Otzdarva's community tierlists) | Weakest — opinion-based rankings only, no real usage data, no API |
+| **Counter-Strike 2** | N/A — not applicable | CS2 has no item/loadout meta concept the way PoE/Dota do (cosmetic skins only, no power-affecting build choices) | Not attempted — see practical implication below, this is a scope decision, not a data-quality gap |
 
 **Practical implication per game:**
 
@@ -106,19 +121,15 @@ open question from the earlier draft:
 - **Dota 2** — build this one second. OpenDota's real match data means
   genuinely trustworthy recommendations, similar in spirit to PoE's approach,
   and Steam's own News API covers patch notes with no scraping at all.
-- **DBD** — the weak link, and worth being upfront about internally and possibly
-  in-product. Realistic approach: have the AI synthesize a recommendation from
-  current patch notes plus a small set of trusted tier-list sources treated as
-  reference text (not structured scraped data), rather than presenting it with
-  the same confidence as PoE's data-backed picks. Consider labeling DBD
-  recommendations differently in the UI (e.g. "community consensus" vs PoE's
-  "ladder data") so the product isn't overstating its own certainty.
+- **CS2** — patch notes only, `fetchRecommendedBuilds` returns an empty array
+  by contract. Considered synthesizing something from opinion/tier-list
+  sources (the DBD approach originally planned here), but decided against
+  forcing a "community consensus" section into a game that doesn't have a
+  build concept at all — better to honestly have no section than a padded one.
 
-This difference in data quality across the 3 launch games is a reasonable
-argument for building PoE's pipeline first as the proof of concept, then
-Dota 2, then DBD last — inverse of the original "DBD first since you can
-self-test" suggestion. Worth weighing both factors (data quality vs. personal
-testability) when deciding actual build order.
+Build order: PoE first as the proof of concept (best data), then Dota 2
+(real data, zero-scrape patch notes), then CS2 last (patch notes only, no
+per-game adapter research needed for a meta/build source since there isn't one).
 
 ## 5. Known Hard Problems (flag early, don't underestimate)
 
@@ -130,11 +141,12 @@ testability) when deciding actual build order.
    formatting conventions are strict and particular). Budget real time for each
    adapter, don't assume a shared parser will work across games.
 3. **Meta/build data source reliability** — resolved via research (Section 4.4).
-   Quality varies significantly by game: PoE has real ladder data, DBD does not.
-   Design the product to be honest about this difference rather than presenting
-   all 3 games' recommendations with equal confidence.
-4. **Synthesis quality** — the AI step needs per-game prompt tuning (DBD's meta
-   language ≠ Destiny's ≠ PoE's). Generic "summarize this" prompting will produce
+   Quality varies significantly by game: PoE/Dota 2 have real ladder/match data,
+   CS2 has no build section at all rather than a lower-confidence one. Design
+   the product to be honest about this difference rather than presenting all
+   3 games' recommendations with equal confidence.
+4. **Synthesis quality** — the AI step needs per-game prompt tuning (PoE's meta
+   language ≠ Dota 2's). Generic "summarize this" prompting will produce
    mediocre output; expect iteration here.
 
 ## 6. Tech Stack
@@ -178,19 +190,19 @@ interactive picker:
   switch, staggered card entrance) — low effort given existing experience, high
   perceived-polish payoff
 
-This pattern is reusable across all 3 launch games with the same component,
-just swapping data: killers/perks (DBD), hero item builds (Dota 2),
-ascendancies/builds (PoE). The component logic is shared; only the `builds`
-data per game differs.
+This pattern is reusable across the 2 games that have build data — hero item
+builds (Dota 2), ascendancies/builds (PoE) — with the same component, just
+swapping data. CS2 skips this component entirely (Section 4.4): patch notes
+only, no build/loadout section to render.
 
 Data note: recommendation quality varies by game — see Section 4.4. Design the
-UI to reflect this honestly (e.g. a "data-backed" indicator for PoE vs.
-"community consensus" for DBD) rather than presenting all games identically.
+UI to reflect this honestly (e.g. a "data-backed" indicator for PoE) rather
+than presenting all games identically.
 
 ## 7. MVP Definition of Done
 
 - Steam login works
-- User can select from DBD / Dota 2 / PoE (only games they own, and only if
+- User can select from CS2 / Dota 2 / PoE (only games they own, and only if
   they've played before)
 - User confirms approximate last-played date
 - App generates and displays:
@@ -219,7 +231,7 @@ user's whole Steam library, not just the 3 supported titles.
 - A "Play" action launches the game directly via Steam's `steam://run/<appid>`
   protocol handler.
 - **The tie-in that makes this worth doing**: if the recommended game is one
-  of the 3 supported titles (DBD/Dota 2/PoE) and the user hasn't played it
+  of the 3 supported titles (CS2/Dota 2/PoE) and the user hasn't played it
   recently, route them into the existing "what's changed" briefing flow
   before/instead of just launching the game — this turns the recommender into
   a funnel back into the app's core feature rather than a standalone dead end.
@@ -273,7 +285,8 @@ the idea still viable rather than redundant with existing tools.
 
 Surfaced during a brainstorm session (2026-07-25), same treatment as 8b — recorded
 so they aren't lost, explicitly **not** to be built before the 3-game MVP
-(PoE done, Dota 2 in progress, DBD pending) is validated:
+(PoE done, Dota 2 in progress — playstyle feature underway — CS2 not started)
+is validated:
 
 - **Personalized per-hero/build deep-dives** — rather than a generic top-5 meta
   list, use a player's own history (OpenDota supports per-player hero stats for
@@ -300,5 +313,5 @@ so they aren't lost, explicitly **not** to be built before the 3-game MVP
 3. Validate with real users once PoE works end-to-end (Reddit gut-check, e.g.
    r/pathofexile) before investing in the other two adapters
 4. Build Dota 2 next (Steam News API for patch notes + OpenDota for meta),
-   then DBD last, being upfront in the UI about DBD's weaker data backing
-   (community consensus rather than usage data)
+   then CS2 last — patch notes only (Steam News API, appid 730), no
+   build/meta section (Section 4.4)

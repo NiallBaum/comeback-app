@@ -1,8 +1,9 @@
 import type { BuildRecommendation } from "@/types";
 
 // Dummy data for UI development. Replace with real per-game ingestion
-// (poe.ninja, OpenDota, DBD tier-list synthesis — see docs/tech-spec.md
-// section 4.4) once each adapter exists.
+// (poe.ninja, OpenDota — see docs/tech-spec.md section 4.4) once each
+// adapter exists. CS2 has no build/loadout data source at all (by design,
+// not a gap) — its mock entry below has empty `items` on purpose.
 
 export const mockPoeBuilds: BuildRecommendation[] = [
   {
@@ -64,57 +65,14 @@ export const mockDota2Builds: BuildRecommendation[] = [
   },
 ];
 
-export const mockDbdBuilds: BuildRecommendation[] = [
+export const mockCs2Builds: BuildRecommendation[] = [
   {
-    gameId: "dbd",
-    characterOrClass: "The Wesker",
-    label: "Slowdown + Info Wesker",
-    items: [
-      {
-        name: "Lethal Pursuer",
-        iconUrl: "https://static.wikia.nocookie.net/deadbydaylight_gamepedia_en/images/6/61/IconPerks_lethalPursuer.png"
-      },
-      {
-        name: "Pain Resonance",
-        iconUrl: "https://static.wikia.nocookie.net/deadbydaylight_gamepedia_en/images/7/79/IconPerks_scourgeHookPainResonance.png"
-      },
-      {
-        name: "Grim Embrace",
-        iconUrl: "https://static.wikia.nocookie.net/deadbydaylight_gamepedia_en/images/1/1c/IconPerks_grimEmbrace.png"
-      },
-      {
-        name: "Nowhere to Hide",
-        iconUrl: "https://static.wikia.nocookie.net/deadbydaylight_gamepedia_en/images/2/29/IconPerks_nowhereToHide.png"
-      },
-    ],
-    whyItWorksNow: "Frequently recommended in current community tier lists (no ladder data available for DBD).",
-    confidence: "community-consensus",
-  
-  },
-  {
-    gameId: "dbd",
-    characterOrClass: "Feng Min",
-    label: "Gen-Rush Support Survivor",
-    items: [
-      {
-        name: "Prove Thyself",
-        iconUrl: "https://static.wikia.nocookie.net/deadbydaylight_gamepedia_en/images/0/0f/IconPerks_proveThyself.png"
-      },
-      {
-        name: "Deja Vu",
-        iconUrl: "https://static.wikia.nocookie.net/deadbydaylight_gamepedia_en/images/8/89/IconPerks_dejaVu.png"
-      },
-      {
-        name: "Resilience",
-        iconUrl: "https://static.wikia.nocookie.net/deadbydaylight_gamepedia_en/images/e/ee/IconPerks_resilience.png"
-      },
-      {
-        name: "Windows of Opportunity",
-        iconUrl: "https://static.wikia.nocookie.net/deadbydaylight_gamepedia_en/images/1/17/IconPerks_windowsOfOpportunity.png"
-      }
-    ],
-    whyItWorksNow: "A common pick in recent community tier lists for consistent gen speed.",
-    confidence: "community-consensus",
+    gameId: "cs2",
+    characterOrClass: "Patch highlight",
+    label: "Operation Riptide balance pass",
+    items: [],
+    whyItWorksNow: "Real patch notes pulled straight from Valve's own news feed — no scraping, no tier-list guesswork. No build/loadout section, since CS2 doesn't have one to recommend.",
+    confidence: "data-backed",
   },
 ];
 

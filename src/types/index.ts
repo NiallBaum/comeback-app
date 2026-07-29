@@ -1,6 +1,6 @@
 // Shared domain types (spec section 4.2 + 6b)
 
-export type GameId = "dbd" | "dota2" | "poe";
+export type GameId = "cs2" | "dota2" | "poe";
 
 export interface PatchEntry {
   gameId: GameId;

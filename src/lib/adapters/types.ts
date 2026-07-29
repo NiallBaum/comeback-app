@@ -1,7 +1,8 @@
 import type { BuildRecommendation, GameId, PatchEntry } from "@/types";
 
 // Contract every per-game adapter implements (spec section 4.2 / 4.4).
-// Data quality varies by game — PoE has real ladder data, DBD does not.
+// Data quality/coverage varies by game — PoE/Dota 2 have real build data,
+// CS2 has none and returns an empty array from fetchRecommendedBuilds.
 // Adapters must be honest about that via BuildRecommendation.confidence.
 export interface GameAdapter {
   gameId: GameId;

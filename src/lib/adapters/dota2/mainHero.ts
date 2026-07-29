@@ -14,6 +14,10 @@ export async function detectMainHero(steamId64: string): Promise<string> {
 
   const topHero = [...playerHeroes].sort((a, b) => b.games - a.games)[0];
 
+  if (topHero.games === 0) {
+    throw new Error("No Dota 2 match data available for this account");
+  }
+
   const heroStats = await getHeroStats();
   const match = heroStats.find((hero) => hero.id === topHero.hero_id);
   if (!match) {

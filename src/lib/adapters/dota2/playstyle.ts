@@ -30,6 +30,11 @@ export async function getPlaystyleProfile(steamId64: string, heroName: string): 
 
   const totals: TotalsField[] = await results.json();
 
+  const kills = totals.find((t) => t.field === "kills");
+  if (!kills || kills.n === 0) {
+    throw new Error(`No Dota 2 match data available for "${heroName}" on this account`);
+  }
+
   function average(field: string): number {
     const entry = totals.find((t) => t.field === field);
     if (!entry || entry.n === 0) return 0;

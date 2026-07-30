@@ -67,7 +67,7 @@ export function PatchNotesList({ gameName, entries }: PatchNotesListProps) {
               </span>
             </div>
           </CardHeader>
-          <CardContent className="flex flex-col gap-2 text-sm">
+          <CardContent className="flex flex-col gap-3 text-sm">
             {parsePatchBody(entry.rawBody).map((block, i) => {
               if (block.type === "header") {
                 return (

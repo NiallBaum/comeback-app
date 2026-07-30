@@ -53,7 +53,7 @@ export default async function DashboardPage() {
         {matchedGames.map((game) => (
           <Card
             key={game.id}
-            className="overflow-hidden pt-0 [clip-path:polygon(12px_0,100%_0,100%_calc(100%-12px),calc(100%-12px)_100%,0_100%,0_12px)]"
+            className="overflow-hidden rounded-none pt-0 [clip-path:polygon(12px_0,100%_0,100%_calc(100%-12px),calc(100%-12px)_100%,0_100%,0_12px)]"
           >
             <div className="relative mb-4 overflow-hidden">
               <img

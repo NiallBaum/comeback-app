@@ -99,8 +99,8 @@ export default async function DashboardPage({
           return (
             <Link key={game.id} href={`/dashboard?game=${game.id}`} className="block">
               <Card
-                className={`overflow-hidden rounded-none pt-0 transition-colors ${CLIP_PATH} ${
-                  isActive ? "border-2 border-brand" : "hover:border hover:border-brand/50"
+                className={`overflow-hidden rounded-none border pt-0 transition-colors ${CLIP_PATH} ${
+                  isActive ? "border-brand" : "border-transparent hover:border-brand/50"
                 }`}
               >
                 <div className="relative mb-4 overflow-hidden">

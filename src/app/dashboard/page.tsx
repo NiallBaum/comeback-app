@@ -9,7 +9,15 @@ import { getBuildsWithCache } from "@/lib/cache/builds";
 import { poeAdapter } from "@/lib/adapters/poe";
 import { dota2Adapter } from "@/lib/adapters/dota2";
 import { BuildPicker } from "@/components/build-picker/BuildPicker";
+import { cs2Adapter } from "@/lib/adapters/cs2";
+import type { GameAdapter } from "@/lib/adapters/types";
+import type { GameId } from "@/types";
 
+const ADAPTERS: Record<GameId, GameAdapter> = {
+  poe: poeAdapter,
+  dota2: dota2Adapter,
+  cs2: cs2Adapter
+}
 
 export default async function DashboardPage() {
   const cookieStore = await cookies()
@@ -34,37 +42,41 @@ export default async function DashboardPage() {
     }
   }
 
-return (
-  <main>
-    <h1>Dashboard</h1>
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {matchedGames.map((game) => (
-        <Card key={game.id} className="overflow-hidden pt-0">
-          <div className="relative mb-4 overflow-hidden rounded-t-lg">
-            <img
-              src={getSteamHeaderUrl(game.id)}
-              alt=""
-              className="aspect-[16/6] w-full rounded-t-lg object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent to-15%" />
+  return (
+    <main>
+      <h1>Dashboard</h1>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {matchedGames.map((game) => (
+          <Card key={game.id} className="overflow-hidden pt-0">
+            <div className="relative mb-4 overflow-hidden rounded-t-lg">
+              <img
+                src={getSteamHeaderUrl(game.id)}
+                alt=""
+                className="aspect-[16/6] w-full rounded-t-lg object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent to-15%" />
 
-          </div>
-          <CardHeader>
-            <CardTitle>{game.name}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">
-              {Math.round(game.playtimeForeverMinutes / 60)} hours played
-            </p>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-    <div className="max-w-[900px] mx-auto mt-8 flex flex-col gap-8">
-      <BuildPicker builds={await getBuildsWithCache(poeAdapter)} />
-      <BuildPicker builds={await getBuildsWithCache(dota2Adapter)} />
-    </div>
-  </main>
-);
+            </div>
+            <CardHeader>
+              <CardTitle>{game.name}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">
+                {Math.round(game.playtimeForeverMinutes / 60)} hours played
+              </p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      <div className="max-w-[900px] mx-auto mt-8 flex flex-col gap-8">
+        {await Promise.all(
+          matchedGames.map(async (game) => {
+            const builds = await getBuildsWithCache(ADAPTERS[game.id]);
+            return builds.length > 0 ? <BuildPicker key={game.id} builds={builds} /> : null;
+          })
+        )}
+      </div>
+    </main>
+  );
 
 }

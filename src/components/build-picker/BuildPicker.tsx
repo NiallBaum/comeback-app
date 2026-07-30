@@ -35,9 +35,9 @@ export function BuildPicker({ builds }: BuildPickerProps) {
 
   const visibleBuilds = leagueModes.length > 1 ? builds.filter((b) => b.leagueMode === (leagueMode ?? leagueModes[0])) : builds
 
-  const [activeTab, setActiveTab] = useState(visibleBuilds[0]?.characterOrClass);
+  const [activeTab, setActiveTab] = useState(`${visibleBuilds[0]?.characterOrClass}-${visibleBuilds[0]?.label}`);
   useEffect(() => {
-    setActiveTab(visibleBuilds[0]?.characterOrClass);
+    setActiveTab(`${visibleBuilds[0]?.characterOrClass}-${visibleBuilds[0]?.label}`);
   }, [leagueMode]);
 
   if (builds.length === 0) {

@@ -41,7 +41,7 @@ export function BuildCard({ build }: BuildCardProps) {
   }
 
   return (
-    <Card className="transition-shadow hover:shadow-lg hover:ring-foreground/20">
+    <Card className="transition-shadow hover:shadow-lg hover:ring-foreground/20 [clip-path:polygon(12px_0,100%_0,100%_calc(100%-12px),calc(100%-12px)_100%,0_100%,0_12px)]">
       <CardHeader>
         <CardTitle>{build.label}</CardTitle>
         <CardAction>

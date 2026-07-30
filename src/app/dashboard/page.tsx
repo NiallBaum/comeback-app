@@ -98,33 +98,35 @@ export default async function DashboardPage({
           const isActive = game.id === selectedGame?.id;
           return (
             <Link key={game.id} href={`/dashboard?game=${game.id}`} className="block">
-              <Card
-                className={`overflow-hidden rounded-none border pt-0 transition-colors ${CLIP_PATH} ${
-                  isActive ? "border-brand" : "border-transparent hover:border-brand/50"
+              <div
+                className={`p-px transition-colors ${CLIP_PATH} ${
+                  isActive ? "bg-brand" : "bg-transparent hover:bg-brand/50"
                 }`}
               >
-                <div className="relative mb-4 overflow-hidden">
-                  <img
-                    src={getSteamHeaderUrl(game.id)}
-                    alt=""
-                    className="aspect-[16/6] w-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent to-15%" />
-                  {isActive && (
-                    <span className="absolute top-2.5 right-2.5 rounded-full bg-brand px-2 py-0.5 font-mono text-[9px] uppercase tracking-wide text-brand-foreground">
-                      Viewing
-                    </span>
-                  )}
-                </div>
-                <CardHeader>
-                  <CardTitle>{game.name}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    {Math.round(game.playtimeForeverMinutes / 60)} hours played
-                  </p>
-                </CardContent>
-              </Card>
+                <Card className={`overflow-hidden rounded-none pt-0 ${CLIP_PATH}`}>
+                  <div className="relative mb-4 overflow-hidden">
+                    <img
+                      src={getSteamHeaderUrl(game.id)}
+                      alt=""
+                      className="aspect-[16/6] w-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent to-15%" />
+                    {isActive && (
+                      <span className="absolute top-2.5 right-2.5 rounded-full bg-brand px-2 py-0.5 font-mono text-[9px] uppercase tracking-wide text-brand-foreground">
+                        Viewing
+                      </span>
+                    )}
+                  </div>
+                  <CardHeader>
+                    <CardTitle>{game.name}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground">
+                      {Math.round(game.playtimeForeverMinutes / 60)} hours played
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
             </Link>
           );
         })}

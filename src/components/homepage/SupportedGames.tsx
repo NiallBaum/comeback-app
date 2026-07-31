@@ -1,7 +1,15 @@
+"use client";
+
+import { useRef } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useGSAP } from "@gsap/react";
 import { SUPPORTED_GAMES } from "@/lib/games";
 import { getSteamHeaderUrl } from "@/lib/steam/assets";
 import { mockPoeBuilds, mockDota2Builds, mockCs2Builds } from "@/lib/mock/builds";
 import type { BuildRecommendation, GameId } from "@/types";
+
+gsap.registerPlugin(ScrollTrigger);
 
 function abbreviate(name: string) {
   const words = name.split(" ").filter(Boolean);
@@ -46,25 +54,66 @@ const SHOWCASE: Array<{
 ];
 
 export function SupportedGames() {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia();
+
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        gsap.utils.toArray<HTMLElement>(".scroll-module").forEach((module) => {
+          gsap.from(module, {
+            opacity: 0,
+            y: 32,
+            duration: 0.7,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: module,
+              start: "top 82%",
+              toggleActions: "play none none none",
+            },
+          });
+
+          const art = module.querySelector<HTMLElement>(".scroll-module-art");
+          if (art) {
+            gsap.to(art, {
+              yPercent: 6,
+              ease: "none",
+              scrollTrigger: {
+                trigger: module,
+                start: "top bottom",
+                end: "bottom top",
+                scrub: true,
+              },
+            });
+          }
+        });
+      });
+    },
+    { scope: containerRef },
+  );
+
   return (
     <section className="border-t border-border py-16" id="games">
       <span className="font-mono text-xs uppercase tracking-wide text-muted-foreground">
         // three games, checked for real
       </span>
-      <div className="mt-8 flex flex-col gap-14">
+      <div ref={containerRef} className="mt-8 flex flex-col gap-14">
         {SHOWCASE.map((entry, index) => {
           const game = SUPPORTED_GAMES.find((g) => g.id === entry.id)!;
           const isDataBacked = entry.build.confidence === "data-backed";
           return (
             <div
               key={entry.id}
-              className="grid grid-cols-1 items-center gap-8 md:grid-cols-2 md:gap-11"
+              className="scroll-module grid grid-cols-1 items-center gap-8 md:grid-cols-2 md:gap-11"
             >
-              <div className={index % 2 === 1 ? "md:order-2" : ""}>
+              <div
+                className={`relative overflow-hidden rounded-sm ${index % 2 === 1 ? "md:order-2" : ""}`}
+              >
                 <img
                   src={getSteamHeaderUrl(game.id)}
                   alt={game.name}
-                  className="aspect-video w-full rounded-sm object-cover"
+                  className="scroll-module-art aspect-video w-full scale-[1.15] object-cover"
                 />
               </div>
               <div className={index % 2 === 1 ? "md:order-1" : ""}>

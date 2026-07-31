@@ -14,6 +14,7 @@ import { PatchNotesList } from "@/components/dashboard/PatchNotesList";
 import { PatchHighlights } from "@/components/dashboard/PatchHighlights";
 import { cs2Adapter } from "@/lib/adapters/cs2";
 import type { GameAdapter } from "@/lib/adapters/types";
+import type { GameConfig } from "@/lib/games";
 import type { GameId } from "@/types";
 
 const ADAPTERS: Record<GameId, GameAdapter> = {
@@ -30,7 +31,7 @@ const PATCH_NOTES_SINCE_DAYS = 180;
 
 type MatchedGame = { id: GameId; name: string; steamAppId: number; playtimeForeverMinutes: number; playtimeLastTwoWeeksMinutes: number };
 
-async function SelectedGamePanel({ game }: { game: MatchedGame }) {
+async function SelectedGamePanel({ game }: { game: GameConfig }) {
   const sinceDate = new Date(Date.now() - PATCH_NOTES_SINCE_DAYS * 24 * 60 * 60 * 1000).toISOString();
   const [builds, patchNotes] = await Promise.all([
     getBuildsWithCache(ADAPTERS[game.id]),
@@ -86,8 +87,20 @@ export default async function DashboardPage({
     }
   }
 
+  // Steam's ownership API occasionally doesn't report a game a player
+  // genuinely owns (confirmed real-world case, not something we can detect
+  // or correct from the API response alone) - rather than silently omitting
+  // it with no explanation, supported games it didn't confirm get offered
+  // as a manual, clearly-labeled "view anyway" option below the real grid.
+  const unmatchedGames = SUPPORTED_GAMES.filter(
+    (config) => !matchedGames.some((game) => game.id === config.id),
+  );
+
   const { game: requestedGameId } = await searchParams;
-  const selectedGame = matchedGames.find((g) => g.id === requestedGameId) ?? matchedGames[0];
+  const requestedMatched = matchedGames.find((g) => g.id === requestedGameId);
+  const requestedUnmatched = unmatchedGames.find((g) => g.id === requestedGameId);
+  const activeGame: GameConfig | undefined = requestedMatched ?? requestedUnmatched ?? matchedGames[0];
+  const activeGameUnconfirmed = !requestedMatched && !!requestedUnmatched;
 
   return (
     <main className="max-w-[1440px] w-full mx-auto px-4 py-8">
@@ -98,7 +111,7 @@ export default async function DashboardPage({
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {matchedGames.map((game) => {
-          const isActive = game.id === selectedGame?.id;
+          const isActive = !activeGameUnconfirmed && game.id === activeGame?.id;
           return (
             <Link key={game.id} href={`/dashboard?game=${game.id}`} className="block">
               <div
@@ -135,9 +148,43 @@ export default async function DashboardPage({
         })}
       </div>
 
-      {selectedGame && (
+      {unmatchedGames.length > 0 && (
+        <div className="mt-8">
+          <span className="font-mono text-xs uppercase tracking-wide text-muted-foreground">
+            // don't see a game you own?
+          </span>
+          <p className="mt-2 max-w-prose text-sm text-muted-foreground">
+            Steam's ownership API doesn't always report every owned game accurately. If you own one of these, you can view it anyway.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {unmatchedGames.map((game) => (
+              <Link
+                key={game.id}
+                href={`/dashboard?game=${game.id}`}
+                className={`border px-3 py-1.5 font-mono text-xs uppercase tracking-wide transition-colors ${
+                  activeGameUnconfirmed && activeGame?.id === game.id
+                    ? "border-brand text-brand"
+                    : "border-border text-muted-foreground hover:border-brand/50 hover:text-foreground"
+                }`}
+              >
+                {game.name}
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {activeGame && (
         <div className="mt-12 max-w-[900px] mx-auto">
-          <SelectedGamePanel game={selectedGame} />
+          {activeGameUnconfirmed && (
+            <div className={`mb-6 border border-border bg-card p-4 ${CLIP_PATH}`}>
+              <span className="font-mono text-xs uppercase tracking-wide text-brand">// unconfirmed</span>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Steam didn't report {activeGame.name} as owned on your account, so we can't confirm this automatically — showing it anyway since you asked.
+              </p>
+            </div>
+          )}
+          <SelectedGamePanel game={activeGame} />
         </div>
       )}
     </main>

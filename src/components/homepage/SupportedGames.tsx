@@ -25,6 +25,10 @@ const SHOWCASE: Array<{
   diffline: string;
   neutral?: boolean;
   build: BuildRecommendation;
+  // Steam's library_hero.jpg reserves blank space on one side for the
+  // client's own logo overlay — object-position has to be tuned per
+  // image's actual composition, a centered crop isn't a safe default.
+  artPosition?: string;
 }> = [
   {
     id: "poe",
@@ -33,6 +37,7 @@ const SHOWCASE: Array<{
     heading: "Ladder data, not opinions",
     diffline: mockPoeBuilds[0].whyItWorksNow,
     build: mockPoeBuilds[0],
+    artPosition: "object-right",
   },
   {
     id: "dota2",
@@ -50,6 +55,7 @@ const SHOWCASE: Array<{
     diffline: mockCs2Builds[0].whyItWorksNow,
     neutral: true,
     build: mockCs2Builds[0],
+    artPosition: "object-right",
   },
 ];
 
@@ -113,7 +119,7 @@ export function SupportedGames() {
                 <img
                   src={getSteamHeaderUrl(game.id)}
                   alt={game.name}
-                  className="scroll-module-art aspect-video w-full scale-[1.15] object-cover"
+                  className={`scroll-module-art aspect-video w-full scale-[1.15] object-cover ${entry.artPosition ?? "object-center"}`}
                 />
               </div>
               <div className={index % 2 === 1 ? "md:order-1" : ""}>

@@ -9,5 +9,5 @@ export const STEAM_APPIDS: Record<GameId, number> = {
 export function getSteamHeaderUrl(gameId: GameId) {
   const appid =  STEAM_APPIDS[gameId]
 
-  return `https://cdn.akamai.steamstatic.com/steam/apps/${appid}/header.jpg`
+  return `https://cdn.akamai.steamstatic.com/steam/apps/${appid}/library_hero.jpg`
 }

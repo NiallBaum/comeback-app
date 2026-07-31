@@ -227,7 +227,26 @@ export const poeAdapter: GameAdapter = {
       const threadHtml = await threadResponse.text();
       const $$ = cheerio.load(threadHtml);
 
-      const rawBody = $$("table.forumPostListTable tr").first().find("td.content-container .content").text().trim();
+      const contentEl = $$("table.forumPostListTable tr").first().find("td.content-container .content")
+      const parts: string[] = []
+
+      contentEl.contents().each((_, node) => {
+        if (node.type !== "tag") return
+
+
+        if (node.tagName === "ul" || node.tagName === "ol") {
+          $$(node).find("li").each((__, li) => {
+            parts.push(`[*] ${$$(li).text().trim()}`);
+          })
+        }
+
+        if (node.tagName === "h1" || node.tagName === "h2" || node.tagName === "h3") {
+          parts.push(`[ ${$$(node).text().trim()} ]`);
+        }
+
+      })
+
+      const rawBody = parts.join("\n").trim();
 
       patchEntries.push({
         gameId: "poe",

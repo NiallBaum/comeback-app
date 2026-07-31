@@ -11,6 +11,7 @@ import { poeAdapter } from "@/lib/adapters/poe";
 import { dota2Adapter } from "@/lib/adapters/dota2";
 import { BuildPicker } from "@/components/build-picker/BuildPicker";
 import { PatchNotesList } from "@/components/dashboard/PatchNotesList";
+import { PatchHighlights } from "@/components/dashboard/PatchHighlights";
 import { cs2Adapter } from "@/lib/adapters/cs2";
 import type { GameAdapter } from "@/lib/adapters/types";
 import type { GameId } from "@/types";
@@ -30,11 +31,16 @@ const PATCH_NOTES_SINCE_DAYS = 180;
 type MatchedGame = { id: GameId; name: string; steamAppId: number; playtimeForeverMinutes: number; playtimeLastTwoWeeksMinutes: number };
 
 async function SelectedGamePanel({ game }: { game: MatchedGame }) {
-  const builds = await getBuildsWithCache(ADAPTERS[game.id]);
+  const sinceDate = new Date(Date.now() - PATCH_NOTES_SINCE_DAYS * 24 * 60 * 60 * 1000).toISOString();
+  const [builds, patchNotes] = await Promise.all([
+    getBuildsWithCache(ADAPTERS[game.id]),
+    ADAPTERS[game.id].fetchPatchNotes(sinceDate),
+  ]);
 
   if (builds.length > 0) {
     return (
       <>
+        <PatchHighlights gameName={game.name} entries={patchNotes} />
         <span className="mb-4 block font-mono text-xs uppercase tracking-wide text-muted-foreground">
           // recommended builds — {game.name.toLowerCase()}
         </span>
@@ -42,9 +48,6 @@ async function SelectedGamePanel({ game }: { game: MatchedGame }) {
       </>
     );
   }
-
-  const sinceDate = new Date(Date.now() - PATCH_NOTES_SINCE_DAYS * 24 * 60 * 60 * 1000).toISOString();
-  const patchNotes = await ADAPTERS[game.id].fetchPatchNotes(sinceDate);
 
   return (
     <>

@@ -6,6 +6,7 @@ interface SteamOwnedGamesResponse {
       appid: number;
       playtime_forever: number;
       playtime_2weeks?: number;
+      rtime_last_played?: number;
     }[];
   };
 }
@@ -13,6 +14,7 @@ export interface OwnedGame {
   appId: number;
   playtimeForeverMinutes: number;
   playtimeLastTwoWeeksMinutes: number;
+  lastPlayedAt: Date | null;
 }
 
 export async function getOwnedGames(steamId: string): Promise<OwnedGame[]> {
@@ -24,6 +26,7 @@ export async function getOwnedGames(steamId: string): Promise<OwnedGame[]> {
   return (data.response.games ?? []).map((game) => ({
     appId: game.appid,
     playtimeForeverMinutes: game.playtime_forever,
-    playtimeLastTwoWeeksMinutes: game.playtime_2weeks ?? 0
+    playtimeLastTwoWeeksMinutes: game.playtime_2weeks ?? 0,
+    lastPlayedAt: game.rtime_last_played ? new Date(game.rtime_last_played * 1000) : null,
   }))
 }

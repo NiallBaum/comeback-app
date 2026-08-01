@@ -25,25 +25,53 @@ const ADAPTERS: Record<GameId, GameAdapter> = {
 
 const CLIP_PATH = "[clip-path:polygon(12px_0,100%_0,100%_calc(100%-12px),calc(100%-12px)_100%,0_100%,0_12px)]";
 
-// Placeholder window until the real "confirm when you last played" flow
-// (tech-spec.md Section 5) exists.
-const PATCH_NOTES_SINCE_DAYS = 180;
+// Fallback window for games with no real Steam last-played timestamp
+// (unconfirmed/manual "view anyway" games - see unmatchedGames below).
+const FALLBACK_SINCE_DAYS = 180;
 
-type MatchedGame = { id: GameId; name: string; steamAppId: number; playtimeForeverMinutes: number; playtimeLastTwoWeeksMinutes: number };
+type MatchedGame = {
+  id: GameId;
+  name: string;
+  steamAppId: number;
+  playtimeForeverMinutes: number;
+  playtimeLastTwoWeeksMinutes: number;
+  lastPlayedAt: Date | null;
+};
 
-async function SelectedGamePanel({ game }: { game: GameConfig }) {
-  const sinceDate = new Date(Date.now() - PATCH_NOTES_SINCE_DAYS * 24 * 60 * 60 * 1000).toISOString();
+function daysSince(date: Date): number {
+  return Math.max(0, Math.floor((Date.now() - date.getTime()) / (24 * 60 * 60 * 1000)));
+}
+
+// "today" / "yesterday" / "N days" - reads more naturally than "0 days
+// since you last played" for someone who played earlier today.
+function sincePhrase(lastPlayedAt: Date): string {
+  const days = daysSince(lastPlayedAt);
+  if (days === 0) return "today";
+  if (days === 1) return "yesterday";
+  return `${days} days ago`;
+}
+
+async function SelectedGamePanel({ game, lastPlayedAt }: { game: GameConfig; lastPlayedAt: Date | null }) {
+  const sinceDate = (
+    lastPlayedAt ?? new Date(Date.now() - FALLBACK_SINCE_DAYS * 24 * 60 * 60 * 1000)
+  ).toISOString();
   const [builds, patchNotes] = await Promise.all([
     getBuildsWithCache(ADAPTERS[game.id]),
     ADAPTERS[game.id].fetchPatchNotes(sinceDate),
   ]);
+
+  const headline = lastPlayedAt
+    ? `you last played ${game.name.toLowerCase()} ${sincePhrase(lastPlayedAt)}`
+    : builds.length > 0
+      ? `recommended builds — ${game.name.toLowerCase()}`
+      : `patch notes — ${game.name.toLowerCase()}`;
 
   if (builds.length > 0) {
     return (
       <>
         <PatchHighlights gameName={game.name} entries={patchNotes} />
         <span className="mb-4 block font-mono text-xs uppercase tracking-wide text-muted-foreground">
-          // recommended builds — {game.name.toLowerCase()}
+          // {headline}
         </span>
         <BuildPicker builds={builds} />
       </>
@@ -53,7 +81,7 @@ async function SelectedGamePanel({ game }: { game: GameConfig }) {
   return (
     <>
       <span className="mb-4 block font-mono text-xs uppercase tracking-wide text-muted-foreground">
-        // patch notes — {game.name.toLowerCase()}
+        // {headline}
       </span>
       <PatchNotesList gameName={game.name} entries={patchNotes} />
     </>
@@ -101,6 +129,9 @@ export default async function DashboardPage({
   const requestedUnmatched = unmatchedGames.find((g) => g.id === requestedGameId);
   const activeGame: GameConfig | undefined = requestedMatched ?? requestedUnmatched ?? matchedGames[0];
   const activeGameUnconfirmed = !requestedMatched && !!requestedUnmatched;
+  const activeGameLastPlayedAt = activeGameUnconfirmed
+    ? null
+    : (requestedMatched ?? matchedGames[0])?.lastPlayedAt ?? null;
 
   return (
     <main className="max-w-[1440px] w-full mx-auto px-4 py-8">
@@ -140,6 +171,11 @@ export default async function DashboardPage({
                     <p className="text-muted-foreground">
                       {Math.round(game.playtimeForeverMinutes / 60)} hours played
                     </p>
+                    {game.lastPlayedAt && (
+                      <p className="text-muted-foreground">
+                        last played {sincePhrase(game.lastPlayedAt)}
+                      </p>
+                    )}
                   </CardContent>
                 </Card>
               </div>
@@ -184,7 +220,7 @@ export default async function DashboardPage({
               </p>
             </div>
           )}
-          <SelectedGamePanel game={activeGame} />
+          <SelectedGamePanel game={activeGame} lastPlayedAt={activeGameLastPlayedAt} />
         </div>
       )}
     </main>

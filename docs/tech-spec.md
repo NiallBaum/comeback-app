@@ -281,6 +281,61 @@ cover one slice (aesthetic, single-game returning-player UX, build content,
 raw data, or planning) but not the combination. This was the basis for judging
 the idea still viable rather than redundant with existing tools.
 
+**Update (2026-08-02): wider pass, via research subagent, confirms the same
+conclusion and surfaces concrete feature ideas.** Extended the search beyond
+poe.ninja/Dotabuff to Mobalytics, U.GG, OP.GG, Blitz.gg, and Stratz — all are
+built for active players optimizing a current session, same gap as the
+original pass found. The "welcome back" pattern for lapsed players only shows
+up at the platform/publisher level instead: WoW's Catch-Up Experience (old
+content hidden by default, short guided refresher instead of the full
+accumulated changelog), Xbox's Jump Back In / Play History (surfaces
+last-played + resume before any menu diving), Hearthstone's lapsed-player
+re-engagement flow, and Steam Replay (shareable year-in-review recap card).
+
+Concrete feature ideas surfaced, not yet scoped or started (same "record, don't
+build yet" treatment as 8d below), ranked best-fit first:
+
+1. **Personalize the patch-notes/build-rec connection to the player's actual
+   last-played build/hero** — e.g. "the thing you played got hit," not just a
+   generic changelog. No competitor does this, and this project already has
+   both halves of the data (real last-played timestamp, per-hero/build recs)
+   separately — this connects existing pieces rather than adding new scope.
+   Judged the single highest-leverage idea from this pass.
+2. Curated "top N changes that matter" view with the full changelog behind a
+   manual expand (WoW's pattern) — partially already true of
+   `PatchHighlights`, could be sharpened with an actual relevance ranking.
+3. Tag build recs "familiar" vs. "needs relearning" for someone who doesn't
+   want to relearn a rotation from scratch — a genuinely returning-player-
+   specific axis active-player sites have no reason to bother with.
+4. A "what's gone" section (removed/reworked content), not just what's new —
+   most relevant to PoE, where whole uniques/mechanics get legacied every
+   league; smaller version possible for CS2 (map/economy changes), weak fit
+   for Dota (heroes get reworked, rarely removed).
+5. "Meta then vs. meta now" snapshot comparison, and its build-level cousin
+   (a build's rank when the player left vs. its rank today) — both require
+   storing historical meta/build snapshots over time rather than just current
+   state, a real backend lift beyond what this project stores today.
+6. Surface the existing last-played personalization one screen earlier, on
+   the homepage itself, across all 3 games at once (Xbox's pattern) — pure
+   frontend resequencing of data already fetched for the dashboard.
+7. **Flagged as the one most likely to conflict with this project's own
+   anti-gimmick/anti-decoration principle** (see the design-direction
+   discussion around the rejected Three.js homepage hero): a shareable
+   "recap" card in the Steam Replay style. Could work if kept strictly plain-
+   text/diff-styled with no confetti/animation/share-gating, but risks
+   drifting into decoration-for-its-own-sake if over-designed. Parked, not a
+   should-build.
+
+Explicitly considered and rejected as out of scope: in-game overlays (OP.GG
+Desktop, Blitz.gg, Overwolf ecosystem — a fundamentally different,
+installed-client product); global leaderboards (not returning-player
+specific, any active player wants the same thing); forced/gated onboarding
+flows (only possible with first-party control over the game client, which
+this project doesn't have); streak/gamification mechanics (already rejected
+per the site's design direction); literal resume-to-exact-save-point (PS5
+Activities/Xbox Quick Resume — no API surface into actual in-game save state
+exists for any of PoE/Dota 2/CS2).
+
 ## 8d. Noted Future Features (v2+): Polish Ideas
 
 Surfaced during a brainstorm session (2026-07-25), same treatment as 8b — recorded

@@ -13,6 +13,7 @@ import { BuildPicker } from "@/components/build-picker/BuildPicker";
 import { PatchNotesList } from "@/components/dashboard/PatchNotesList";
 import { PatchHighlights } from "@/components/dashboard/PatchHighlights";
 import { cs2Adapter } from "@/lib/adapters/cs2";
+import { getPatchNotesWithCache } from "@/lib/cache/patchNotes";
 import type { GameAdapter } from "@/lib/adapters/types";
 import type { GameConfig } from "@/lib/games";
 import type { GameId } from "@/types";
@@ -57,7 +58,7 @@ async function SelectedGamePanel({ game, lastPlayedAt }: { game: GameConfig; las
   ).toISOString();
   const [builds, patchNotes] = await Promise.all([
     getBuildsWithCache(ADAPTERS[game.id]),
-    ADAPTERS[game.id].fetchPatchNotes(sinceDate),
+    getPatchNotesWithCache(ADAPTERS[game.id], sinceDate),
   ]);
 
   const headline = lastPlayedAt

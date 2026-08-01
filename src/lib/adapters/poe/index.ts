@@ -34,6 +34,7 @@ interface BuildTargetsResult {
 interface TopCharacter {
   account: string;
   name: string;
+  dpsLabel?: string;
 }
 
 interface CharacterItem {
@@ -124,11 +125,11 @@ async function getTopCharacters(league: PoeLeague, count: number): Promise<TopCh
   if (!names?.length) return [];
 
   const ranked = names
-    .map((_, i) => ({ index: i, dps: parseDpsString(dps?.[i]?.str) }))
+    .map((_, i) => ({ index: i, dps: parseDpsString(dps?.[i]?.str), dpsLabel: dps?.[i]?.str }))
     .sort((a, b) => b.dps - a.dps)
     .slice(0, count);
 
-  return ranked.map(({ index }) => ({ account: accounts[index].str!, name: names[index].str! }));
+  return ranked.map(({ index, dpsLabel }) => ({ account: accounts[index].str!, name: names[index].str!, dpsLabel }));
 }
 
 
@@ -151,15 +152,17 @@ async function findTopCharacter(target: BuildTarget): Promise<TopCharacter | nul
 
   let bestIndex = 0;
   let bestDps = -Infinity;
+  let bestDpsLabel: string | undefined;
   for (let i = 0; i < names.length; i++) {
     const value = parseDpsString(dps?.[i]?.str);
     if (value > bestDps) {
       bestDps = value;
       bestIndex = i;
+      bestDpsLabel = dps?.[i]?.str;
     }
   }
 
-  return { account: accounts[bestIndex].str!, name: names[bestIndex].str! };
+  return { account: accounts[bestIndex].str!, name: names[bestIndex].str!, dpsLabel: bestDpsLabel };
 }
 
 async function getCharacterBuild(league: PoeLeague, character: TopCharacter): Promise<CharacterResponse | null> {
@@ -175,7 +178,7 @@ async function getCharacterBuild(league: PoeLeague, character: TopCharacter): Pr
   return response.json();
 }
 
-function toBuildRecommendation(league: PoeLeague, label: string, build: CharacterResponse): BuildRecommendation {
+function toBuildRecommendation(league: PoeLeague, label: string, build: CharacterResponse, dpsLabel?: string): BuildRecommendation {
   return {
     gameId: "poe",
     characterOrClass: build.class,
@@ -184,7 +187,9 @@ function toBuildRecommendation(league: PoeLeague, label: string, build: Characte
       name: item.itemData.name || item.itemData.typeLine,
       iconUrl: item.itemData.icon,
     })),
-    whyItWorksNow: `Top-performing ${label} build currently in ${league.name}`,
+    whyItWorksNow: dpsLabel
+      ? `${dpsLabel} DPS — top-performing ${label} build currently in ${league.name}`
+      : `Top-performing ${label} build currently in ${league.name}`,
     confidence: "data-backed",
     pobCode: build.pathOfBuildingExport,
     leagueMode: league.name,
@@ -269,7 +274,7 @@ export const poeAdapter: GameAdapter = {
       if (!top) continue;
       const build = await getCharacterBuild(target.league, top);
       if (!build) continue;
-      recommendations.push(toBuildRecommendation(target.league, target.skill, build));
+      recommendations.push(toBuildRecommendation(target.league, target.skill, build, top.dpsLabel));
     }
 
     for (const league of fallbackLeagues) {
@@ -277,7 +282,7 @@ export const poeAdapter: GameAdapter = {
       for (const top of tops) {
         const build = await getCharacterBuild(league, top);
         if (!build) continue;
-        recommendations.push(toBuildRecommendation(league, build.class, build));
+        recommendations.push(toBuildRecommendation(league, build.class, build, top.dpsLabel));
       }
     }
 

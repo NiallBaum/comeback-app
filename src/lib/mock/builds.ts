@@ -69,9 +69,9 @@ export const mockCs2Builds: BuildRecommendation[] = [
   {
     gameId: "cs2",
     characterOrClass: "Patch highlight",
-    label: "Operation Riptide balance pass",
+    label: "Recent balance & economy pass",
     items: [],
-    whyItWorksNow: "Real patch notes pulled straight from Valve's own news feed — no scraping, no tier-list guesswork. No build/loadout section, since CS2 doesn't have one to recommend.",
+    whyItWorksNow: "Armor pricing and mid-round buys shifted again in the latest update.",
     confidence: "data-backed",
   },
 ];

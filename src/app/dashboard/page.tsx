@@ -142,10 +142,11 @@ export default async function DashboardPage({
       <h1 className="mt-1 mb-8 text-3xl font-bold tracking-tight">Dashboard</h1>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {matchedGames.map((game) => {
-          const isActive = !activeGameUnconfirmed && game.id === activeGame?.id;
+        {SUPPORTED_GAMES.map((config) => {
+          const matched = matchedGames.find((game) => game.id === config.id);
+          const isActive = config.id === activeGame?.id;
           return (
-            <Link key={game.id} href={`/dashboard?game=${game.id}`} className="block">
+            <Link key={config.id} href={`/dashboard?game=${config.id}`} className="block">
               <div
                 className={`p-px transition-colors ${CLIP_PATH} ${
                   isActive ? "bg-brand" : "bg-transparent hover:bg-brand/50"
@@ -154,27 +155,41 @@ export default async function DashboardPage({
                 <Card className={`overflow-hidden rounded-none pt-0 ${CLIP_PATH}`}>
                   <div className="relative mb-4 overflow-hidden">
                     <img
-                      src={getSteamHeaderUrl(game.id)}
+                      src={getSteamHeaderUrl(config.id)}
                       alt=""
-                      className="aspect-[16/6] w-full object-cover"
+                      className={`aspect-[16/6] w-full object-cover ${matched ? "" : "opacity-60 grayscale"}`}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent to-15%" />
-                    {isActive && (
+                    {isActive ? (
                       <span className="absolute top-2.5 right-2.5 rounded-full bg-brand px-2 py-0.5 font-mono text-[9px] uppercase tracking-wide text-brand-foreground">
-                        Viewing
+                        {matched ? "Viewing" : "Previewing"}
                       </span>
+                    ) : (
+                      !matched && (
+                        <span className="absolute top-2.5 right-2.5 rounded-full border border-border bg-background/80 px-2 py-0.5 font-mono text-[9px] uppercase tracking-wide text-muted-foreground">
+                          Preview
+                        </span>
+                      )
                     )}
                   </div>
                   <CardHeader>
-                    <CardTitle>{game.name}</CardTitle>
+                    <CardTitle>{config.name}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-muted-foreground">
-                      {Math.round(game.playtimeForeverMinutes / 60)} hours played
-                    </p>
-                    {game.lastPlayedAt && (
+                    {matched ? (
+                      <>
+                        <p className="text-muted-foreground">
+                          {Math.round(matched.playtimeForeverMinutes / 60)} hours played
+                        </p>
+                        {matched.lastPlayedAt && (
+                          <p className="text-muted-foreground">
+                            last played {sincePhrase(matched.lastPlayedAt)}
+                          </p>
+                        )}
+                      </>
+                    ) : (
                       <p className="text-muted-foreground">
-                        last played {sincePhrase(game.lastPlayedAt)}
+                        Not linked to your account — click to preview real data anyway.
                       </p>
                     )}
                   </CardContent>
@@ -185,41 +200,12 @@ export default async function DashboardPage({
         })}
       </div>
 
-      {unmatchedGames.length > 0 && (
-        <div className="mt-8">
-          <span className="font-mono text-xs uppercase tracking-wide text-muted-foreground">
-            // don't see a game you own?
-          </span>
-          <p className="mt-2 max-w-prose text-sm text-muted-foreground">
-            Steam's ownership API doesn't always report every owned game accurately. If you own one of these, you can view it anyway.
-          </p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {unmatchedGames.map((game) => (
-              <Link
-                key={game.id}
-                href={`/dashboard?game=${game.id}`}
-                className={`border px-3 py-1.5 font-mono text-xs uppercase tracking-wide transition-colors ${
-                  activeGameUnconfirmed && activeGame?.id === game.id
-                    ? "border-brand text-brand"
-                    : "border-border text-muted-foreground hover:border-brand/50 hover:text-foreground"
-                }`}
-              >
-                {game.name}
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
-
       {activeGame && (
         <div className="mt-12 max-w-[900px] mx-auto">
           {activeGameUnconfirmed && (
-            <div className={`mb-6 border border-border bg-card p-4 ${CLIP_PATH}`}>
-              <span className="font-mono text-xs uppercase tracking-wide text-brand">// unconfirmed</span>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Steam didn't report {activeGame.name} as owned on your account, so we can't confirm this automatically — showing it anyway since you asked.
-              </p>
-            </div>
+            <p className="mb-6 font-mono text-xs text-muted-foreground">
+              <span className="text-brand">// preview mode</span> — Steam hasn't confirmed {activeGame.name} is linked to your account, but everything below comes from a different, independent source, so it's just as real as any other game.
+            </p>
           )}
           <SelectedGamePanel game={activeGame} lastPlayedAt={activeGameLastPlayedAt} />
         </div>

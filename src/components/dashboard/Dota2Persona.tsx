@@ -1,7 +1,7 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { detectMainHero } from "@/lib/adapters/dota2/mainHero";
 import { getPlaystyleProfileWithCache } from "@/lib/cache/playstyle";
-import { filterPatchNotesByHero } from "@/lib/adapters/dota2/heroPatches";
+import { getHeroPatchHighlights } from "@/lib/adapters/dota2/heroPatches";
 import { getHeroStats } from "@/lib/adapters/dota2";
 import { PlaystyleProfileCard } from "./PlaystyleProfileCard";
 import { HeroPicker } from "./HeroPicker";
@@ -29,12 +29,12 @@ export async function Dota2Persona({ steamId, heroParam, patchNotes }: Dota2Pers
   }
 
   let profile = null;
-  let heroPatchNotes: PatchEntry[] = [];
+  let heroHighlights: string[] = [];
 
   if (heroName) {
     try {
       profile = await getPlaystyleProfileWithCache(steamId, heroName);
-      heroPatchNotes = filterPatchNotesByHero(patchNotes, heroName);
+      heroHighlights = getHeroPatchHighlights(patchNotes, heroName);
     } catch {
       // Either auto-detected or manually picked, but genuinely no match data
       // for this specific hero on this account - profile stays null.
@@ -46,14 +46,14 @@ export async function Dota2Persona({ steamId, heroParam, patchNotes }: Dota2Pers
       <div className="mb-8">
         <FadeIn transitionKey={`profile-${heroName}`}>
           <PlaystyleProfileCard heroName={heroName} profile={profile} />
-          {heroPatchNotes.length > 0 && (
+          {heroHighlights.length > 0 && (
             <div className="mt-3 border-t border-border pt-3">
               <span className="mb-2 block font-mono text-xs uppercase tracking-wide text-muted-foreground">
                 // what changed for {heroName.toLowerCase()}
               </span>
               <ul className="space-y-1 font-mono text-sm text-add">
-                {heroPatchNotes.slice(0, 3).map((entry) => (
-                  <li key={entry.rawTitle}>+ {entry.rawTitle}</li>
+                {heroHighlights.map((text) => (
+                  <li key={text}>+ {text}</li>
                 ))}
               </ul>
             </div>

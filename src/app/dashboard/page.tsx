@@ -15,6 +15,7 @@ import { PatchHighlights } from "@/components/dashboard/PatchHighlights";
 import { cs2Adapter } from "@/lib/adapters/cs2";
 import { getPatchNotesWithCache } from "@/lib/cache/patchNotes";
 import { Dota2Persona } from "@/components/dashboard/Dota2Persona";
+import { getLastPlayedAtWithCache } from "@/lib/cache/lastPlayed";
 import type { GameAdapter } from "@/lib/adapters/types";
 import type { GameConfig } from "@/lib/games";
 import type { GameId } from "@/types";
@@ -147,9 +148,19 @@ export default async function DashboardPage({
   const requestedUnmatched = unmatchedGames.find((g) => g.id === requestedGameId);
   const activeGame: GameConfig | undefined = requestedMatched ?? requestedUnmatched ?? matchedGames[0];
   const activeGameUnconfirmed = !requestedMatched && !!requestedUnmatched;
-  const activeGameLastPlayedAt = activeGameUnconfirmed
+  const steamDerivedLastPlayedAt = activeGameUnconfirmed
     ? null
     : (requestedMatched ?? matchedGames[0])?.lastPlayedAt ?? null;
+
+  // Dota 2 can't get a real timestamp from Steam's GetOwnedGames (the known
+  // ownership bug means this game is always "unconfirmed" for some accounts),
+  // so fall back to OpenDota's own match history - a real, independent source
+  // of "when did you actually last play" that doesn't depend on Steam's
+  // ownership check at all.
+  const activeGameLastPlayedAt =
+    !steamDerivedLastPlayedAt && activeGame?.id === "dota2"
+      ? await getLastPlayedAtWithCache(session.steamId)
+      : steamDerivedLastPlayedAt;
 
   return (
     <main className="max-w-[1440px] w-full mx-auto px-4 py-8">

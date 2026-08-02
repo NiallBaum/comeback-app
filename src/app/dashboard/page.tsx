@@ -36,9 +36,12 @@ type MatchedGame = {
   id: GameId;
   name: string;
   steamAppId: number;
-  playtimeForeverMinutes: number;
-  playtimeLastTwoWeeksMinutes: number;
   lastPlayedAt: Date | null;
+  // "steam" = confirmed via GetOwnedGames. "opendota" = Steam didn't confirm
+  // it (the known ownership bug), but OpenDota has real match history for
+  // this account - for a free-to-play game, that's better evidence of
+  // genuine play than Steam's license-record formality ever was.
+  confirmedVia: "steam" | "opendota";
 };
 
 function daysSince(date: Date): number {
@@ -130,15 +133,33 @@ export default async function DashboardPage({
   for (const config of SUPPORTED_GAMES) {
     const owned = ownedGames.find((g) => g.appId === config.steamAppId);
     if (owned) {
-      matchedGames.push({ ...config, ...owned });
+      matchedGames.push({ ...config, lastPlayedAt: owned.lastPlayedAt, confirmedVia: "steam" });
+      continue;
+    }
+
+    // Steam's ownership API occasionally doesn't report a game a player
+    // genuinely owns (confirmed real-world case for Dota 2, not something we
+    // can detect or correct from the API response alone). For Dota 2
+    // specifically, OpenDota's own match history is a real alternate source -
+    // if it has real matches for this account, treat it as confirmed too,
+    // rather than knee-capping the whole feature over a Steam formality that
+    // doesn't matter much for a free-to-play game.
+    if (config.id === "dota2") {
+      try {
+        const lastPlayedAt = await getLastPlayedAtWithCache(session.steamId);
+        if (lastPlayedAt) {
+          matchedGames.push({ ...config, lastPlayedAt, confirmedVia: "opendota" });
+          continue;
+        }
+      } catch {
+        // OpenDota unreachable - falls through to unmatched below, same as
+        // if Steam and OpenDota both genuinely have nothing.
+      }
     }
   }
 
-  // Steam's ownership API occasionally doesn't report a game a player
-  // genuinely owns (confirmed real-world case, not something we can detect
-  // or correct from the API response alone) - rather than silently omitting
-  // it with no explanation, supported games it didn't confirm get offered
-  // as a manual, clearly-labeled "view anyway" option below the real grid.
+  // Anything left here has no evidence from either source - offered as a
+  // manual, clearly-labeled "view anyway" option below the real grid.
   const unmatchedGames = SUPPORTED_GAMES.filter(
     (config) => !matchedGames.some((game) => game.id === config.id),
   );
@@ -148,19 +169,9 @@ export default async function DashboardPage({
   const requestedUnmatched = unmatchedGames.find((g) => g.id === requestedGameId);
   const activeGame: GameConfig | undefined = requestedMatched ?? requestedUnmatched ?? matchedGames[0];
   const activeGameUnconfirmed = !requestedMatched && !!requestedUnmatched;
-  const steamDerivedLastPlayedAt = activeGameUnconfirmed
+  const activeGameLastPlayedAt = activeGameUnconfirmed
     ? null
     : (requestedMatched ?? matchedGames[0])?.lastPlayedAt ?? null;
-
-  // Dota 2 can't get a real timestamp from Steam's GetOwnedGames (the known
-  // ownership bug means this game is always "unconfirmed" for some accounts),
-  // so fall back to OpenDota's own match history - a real, independent source
-  // of "when did you actually last play" that doesn't depend on Steam's
-  // ownership check at all.
-  const activeGameLastPlayedAt =
-    !steamDerivedLastPlayedAt && activeGame?.id === "dota2"
-      ? await getLastPlayedAtWithCache(session.steamId)
-      : steamDerivedLastPlayedAt;
 
   return (
     <main className="max-w-[1440px] w-full mx-auto px-4 py-8">
@@ -205,16 +216,11 @@ export default async function DashboardPage({
                   </CardHeader>
                   <CardContent>
                     {matched ? (
-                      <>
+                      matched.lastPlayedAt && (
                         <p className="text-muted-foreground">
-                          {Math.round(matched.playtimeForeverMinutes / 60)} hours played
+                          last played {sincePhrase(matched.lastPlayedAt)}
                         </p>
-                        {matched.lastPlayedAt && (
-                          <p className="text-muted-foreground">
-                            last played {sincePhrase(matched.lastPlayedAt)}
-                          </p>
-                        )}
-                      </>
+                      )
                     ) : (
                       <p className="text-muted-foreground">
                         Not linked to your account — click to preview real data anyway.

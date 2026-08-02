@@ -22,7 +22,7 @@ export function PlaystyleProfileCard({ heroName, profile }: PlaystyleProfileCard
   ];
 
   return (
-    <Card>
+    <Card className="rounded-none [clip-path:polygon(12px_0,100%_0,100%_calc(100%-12px),calc(100%-12px)_100%,0_100%,0_12px)]">
       <CardHeader>
         <CardTitle>Playstyle profile — {heroName}</CardTitle>
       </CardHeader>

@@ -14,6 +14,7 @@ import { PatchNotesList } from "@/components/dashboard/PatchNotesList";
 import { PatchHighlights } from "@/components/dashboard/PatchHighlights";
 import { cs2Adapter } from "@/lib/adapters/cs2";
 import { getPatchNotesWithCache } from "@/lib/cache/patchNotes";
+import { Dota2Persona } from "@/components/dashboard/Dota2Persona";
 import type { GameAdapter } from "@/lib/adapters/types";
 import type { GameConfig } from "@/lib/games";
 import type { GameId } from "@/types";
@@ -52,7 +53,17 @@ function sincePhrase(lastPlayedAt: Date): string {
   return `${days} days ago`;
 }
 
-async function SelectedGamePanel({ game, lastPlayedAt }: { game: GameConfig; lastPlayedAt: Date | null }) {
+async function SelectedGamePanel({
+  game,
+  lastPlayedAt,
+  steamId,
+  heroParam,
+}: {
+  game: GameConfig;
+  lastPlayedAt: Date | null;
+  steamId: string;
+  heroParam?: string;
+}) {
   const sinceDate = (
     lastPlayedAt ?? new Date(Date.now() - FALLBACK_SINCE_DAYS * 24 * 60 * 60 * 1000)
   ).toISOString();
@@ -67,9 +78,14 @@ async function SelectedGamePanel({ game, lastPlayedAt }: { game: GameConfig; las
       ? `recommended builds — ${game.name.toLowerCase()}`
       : `patch notes — ${game.name.toLowerCase()}`;
 
+  const persona = game.id === "dota2" && (
+    <Dota2Persona steamId={steamId} heroParam={heroParam} patchNotes={patchNotes} />
+  );
+
   if (builds.length > 0) {
     return (
       <>
+        {persona}
         <PatchHighlights gameName={game.name} entries={patchNotes} />
         <span className="mb-4 block font-mono text-xs uppercase tracking-wide text-muted-foreground">
           // {headline}
@@ -81,6 +97,7 @@ async function SelectedGamePanel({ game, lastPlayedAt }: { game: GameConfig; las
 
   return (
     <>
+      {persona}
       <span className="mb-4 block font-mono text-xs uppercase tracking-wide text-muted-foreground">
         // {headline}
       </span>
@@ -92,7 +109,7 @@ async function SelectedGamePanel({ game, lastPlayedAt }: { game: GameConfig; las
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ game?: string }>;
+  searchParams: Promise<{ game?: string; hero?: string }>;
 }) {
   const cookieStore = await cookies()
   const token = cookieStore.get(SESSION_COOKIE_NAME)?.value
@@ -125,7 +142,7 @@ export default async function DashboardPage({
     (config) => !matchedGames.some((game) => game.id === config.id),
   );
 
-  const { game: requestedGameId } = await searchParams;
+  const { game: requestedGameId, hero: heroParam } = await searchParams;
   const requestedMatched = matchedGames.find((g) => g.id === requestedGameId);
   const requestedUnmatched = unmatchedGames.find((g) => g.id === requestedGameId);
   const activeGame: GameConfig | undefined = requestedMatched ?? requestedUnmatched ?? matchedGames[0];
@@ -207,7 +224,12 @@ export default async function DashboardPage({
               <span className="text-brand">// preview mode</span> — Steam hasn't confirmed {activeGame.name} is linked to your account, but everything below comes from a different, independent source, so it's just as real as any other game.
             </p>
           )}
-          <SelectedGamePanel game={activeGame} lastPlayedAt={activeGameLastPlayedAt} />
+          <SelectedGamePanel
+            game={activeGame}
+            lastPlayedAt={activeGameLastPlayedAt}
+            steamId={session.steamId}
+            heroParam={heroParam}
+          />
         </div>
       )}
     </main>

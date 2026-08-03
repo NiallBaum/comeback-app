@@ -250,7 +250,7 @@ export default async function DashboardPage({
         <div className="mt-12 max-w-[900px] mx-auto">
           {activeGameUnconfirmed && (
             <p className="mb-6 font-mono text-xs text-muted-foreground">
-              <span className="text-brand">// preview mode</span> — Steam hasn't confirmed {activeGame.name} is linked to your account, but everything below comes from a different, independent source, so it's just as real as any other game.
+              <span className="text-brand">// preview mode</span> — Steam hasn&apos;t confirmed {activeGame.name} is linked to your account, but everything below comes from a different, independent source, so it&apos;s just as real as any other game.
             </p>
           )}
           <SelectedGamePanel

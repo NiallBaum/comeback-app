@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import type { BuildRecommendation } from "@/types";
 import { BuildCard } from "./BuildCard";
 import { AnimatePresence, motion } from "framer-motion";
@@ -35,10 +35,19 @@ export function BuildPicker({ builds }: BuildPickerProps) {
 
   const visibleBuilds = leagueModes.length > 1 ? builds.filter((b) => b.leagueMode === (leagueMode ?? leagueModes[0])) : builds
 
-  const [activeTab, setActiveTab] = useState(`${visibleBuilds[0]?.characterOrClass}-${visibleBuilds[0]?.label}`);
-  useEffect(() => {
-    setActiveTab(`${visibleBuilds[0]?.characterOrClass}-${visibleBuilds[0]?.label}`);
-  }, [leagueMode]);
+  const defaultTab = `${visibleBuilds[0]?.characterOrClass}-${visibleBuilds[0]?.label}`;
+  const [activeTab, setActiveTab] = useState(defaultTab);
+
+  // Reset the selected tab when the league-mode filter changes the visible
+  // build set, without the extra render+effect+re-render cycle a useEffect
+  // reset would cause - adjusting state directly during render (comparing
+  // against the last-seen leagueMode) is React's own recommended pattern
+  // for "reset state when a prop/derived value changes."
+  const [prevLeagueMode, setPrevLeagueMode] = useState(leagueMode);
+  if (leagueMode !== prevLeagueMode) {
+    setPrevLeagueMode(leagueMode);
+    setActiveTab(defaultTab);
+  }
 
   if (builds.length === 0) {
     return (

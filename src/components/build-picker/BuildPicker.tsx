@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import type { BuildRecommendation } from "@/types";
 import { BuildCard } from "./BuildCard";
 import { AnimatePresence, motion } from "framer-motion";
-import { getSteamHeaderUrl } from "@/lib/steam/assets";
+import { getSteamHeaderUrl, getSteamHeaderArtPosition } from "@/lib/steam/assets";
 import { Card, CardContent } from "@/components/ui/card";
 import { SwordIcon } from "lucide-react";
 import { 
@@ -62,7 +62,7 @@ export function BuildPicker({ builds }: BuildPickerProps) {
         <img
           src={headerUrl}
           alt=""
-          className="aspect-[16/6] w-full object-cover"
+          className={`aspect-[16/6] w-full object-cover ${getSteamHeaderArtPosition(builds[0].gameId)}`}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent to-40%" />
 

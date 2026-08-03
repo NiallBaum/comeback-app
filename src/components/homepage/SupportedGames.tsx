@@ -5,7 +5,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import { SUPPORTED_GAMES } from "@/lib/games";
-import { getSteamHeaderUrl } from "@/lib/steam/assets";
+import { getSteamHeaderUrl, getSteamHeaderArtPosition } from "@/lib/steam/assets";
 import { mockPoeBuilds, mockDota2Builds, mockCs2Builds } from "@/lib/mock/builds";
 import type { BuildRecommendation, GameId } from "@/types";
 
@@ -25,10 +25,6 @@ const SHOWCASE: Array<{
   diffline: string;
   neutral?: boolean;
   build: BuildRecommendation;
-  // Steam's library_hero.jpg reserves blank space on one side for the
-  // client's own logo overlay — object-position has to be tuned per
-  // image's actual composition, a centered crop isn't a safe default.
-  artPosition?: string;
 }> = [
   {
     id: "poe",
@@ -37,7 +33,6 @@ const SHOWCASE: Array<{
     heading: "Ladder data, not opinions",
     diffline: mockPoeBuilds[0].whyItWorksNow,
     build: mockPoeBuilds[0],
-    artPosition: "object-right",
   },
   {
     id: "dota2",
@@ -54,7 +49,6 @@ const SHOWCASE: Array<{
     heading: "No builds to invent, so we don't",
     diffline: mockCs2Builds[0].whyItWorksNow,
     build: mockCs2Builds[0],
-    artPosition: "object-right",
   },
 ];
 
@@ -118,7 +112,7 @@ export function SupportedGames() {
                 <img
                   src={getSteamHeaderUrl(game.id)}
                   alt={game.name}
-                  className={`scroll-module-art aspect-video w-full scale-[1.15] object-cover ${entry.artPosition ?? "object-center"}`}
+                  className={`scroll-module-art aspect-video w-full scale-[1.15] object-cover ${getSteamHeaderArtPosition(entry.id)}`}
                 />
               </div>
               <div className={index % 2 === 1 ? "md:order-1" : ""}>

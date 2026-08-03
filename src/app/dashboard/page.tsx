@@ -5,7 +5,7 @@ import { SESSION_COOKIE_NAME, verifySession } from "@/lib/steam/session";
 import { getOwnedGames } from "@/lib/steam/client";
 import { SUPPORTED_GAMES } from "@/lib/games"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { getSteamHeaderUrl } from "@/lib/steam/assets";
+import { getSteamHeaderUrl, getSteamHeaderArtPosition } from "@/lib/steam/assets";
 import { getBuildsWithCache } from "@/lib/cache/builds";
 import { poeAdapter } from "@/lib/adapters/poe";
 import { dota2Adapter } from "@/lib/adapters/dota2";
@@ -196,7 +196,7 @@ export default async function DashboardPage({
                     <img
                       src={getSteamHeaderUrl(config.id)}
                       alt=""
-                      className={`aspect-[16/6] w-full object-cover ${matched ? "" : "opacity-60 grayscale"}`}
+                      className={`aspect-[16/6] w-full object-cover ${getSteamHeaderArtPosition(config.id)} ${matched ? "" : "opacity-60 grayscale"}`}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent to-15%" />
                     {isActive ? (

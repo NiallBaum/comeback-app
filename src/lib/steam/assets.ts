@@ -11,3 +11,12 @@ export function getSteamHeaderUrl(gameId: GameId) {
 
   return `https://cdn.akamai.steamstatic.com/steam/apps/${appid}/library_hero.jpg`
 }
+
+// library_hero.jpg reserves blank space on one side of the frame for the
+// Steam client's own logo overlay - PoE and CS2's art sits in the right
+// ~40% of the frame, Dota 2's spans the full width. Centralized here since
+// every consumer of getSteamHeaderUrl needs the same crop treatment, not
+// just the homepage (this fix previously only existed there).
+export function getSteamHeaderArtPosition(gameId: GameId): string {
+  return gameId === "dota2" ? "object-center" : "object-right";
+}

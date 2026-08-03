@@ -16,6 +16,7 @@ import { cs2Adapter } from "@/lib/adapters/cs2";
 import { getPatchNotesWithCache } from "@/lib/cache/patchNotes";
 import { Dota2Persona } from "@/components/dashboard/Dota2Persona";
 import { getLastPlayedAtWithCache } from "@/lib/cache/lastPlayed";
+import { getPatchHighlights } from "@/lib/patchNotes";
 import type { GameAdapter } from "@/lib/adapters/types";
 import type { GameConfig } from "@/lib/games";
 import type { GameId } from "@/types";
@@ -99,13 +100,24 @@ async function SelectedGamePanel({
     );
   }
 
+  // Same condensed "highlights + expand" treatment as the builds branch
+  // above - only falls back to the full unconditional list when there's
+  // truly nothing bullet-shaped to condense (empty history, or patches
+  // that are pure prose/headers), so an expand-to-reveal never hides real
+  // content behind a click for no reason.
+  const hasHighlights = getPatchHighlights(patchNotes).length > 0;
+
   return (
     <>
       {persona}
       <span className="mb-4 block font-mono text-xs uppercase tracking-wide text-muted-foreground">
         // {headline}
       </span>
-      <PatchNotesList gameName={game.name} entries={patchNotes} />
+      {hasHighlights ? (
+        <PatchHighlights gameName={game.name} entries={patchNotes} />
+      ) : (
+        <PatchNotesList gameName={game.name} entries={patchNotes} />
+      )}
     </>
   );
 }

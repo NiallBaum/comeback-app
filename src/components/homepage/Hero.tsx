@@ -12,7 +12,7 @@ const DIFF_LINES = [mockPoeBuilds[0].whyItWorksNow, mockDota2Builds[0].whyItWork
 
 function SampleBriefingPanel() {
   return (
-    <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+    <div className="overflow-hidden rounded-lg border border-border bg-card [clip-path:polygon(12px_0,100%_0,100%_calc(100%-12px),calc(100%-12px)_100%,0_100%,0_12px)] shadow-sm">
       <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
         <span className="font-mono text-xs text-muted-foreground">sample_briefing.log</span>
         <div className="flex gap-1.5">

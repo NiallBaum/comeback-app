@@ -94,11 +94,11 @@ export function SupportedGames() {
 
   return (
     <section className="border-t border-border py-16" id="games">
-      <span className="font-mono text-xs uppercase tracking-wide text-muted-foreground">
-        // patch notes for your whole library, free
+      <span className="font-mono text-xs uppercase tracking-wide text-brand">
+        // the deep dive
       </span>
       <p className="mt-3 max-w-2xl text-muted-foreground">
-        Connect your Steam account and every game you own gets a real &quot;what changed while you were gone&quot; briefing — no setup, no per-game work on our end. For these three, we go a lot deeper.
+        Path of Exile, Dota 2, and CS2 get more than a changelog — real builds and stats, sourced from live data wherever we can get it.
       </p>
       <div ref={containerRef} className="mt-8 flex flex-col gap-14">
         {SHOWCASE.map((entry, index) => {

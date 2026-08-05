@@ -38,12 +38,11 @@ export async function Nav() {
               >
                 Dashboard
               </Link>
-              <Link
-                href="/api/auth/steam/logout"
-                className={buttonVariants({ variant: "ghost", size: "sm" })}
-              >
-                Sign out
-              </Link>
+              <form action="/api/auth/steam/logout" method="POST">
+                <button type="submit" className={buttonVariants({ variant: "ghost", size: "sm" })}>
+                  Sign out
+                </button>
+              </form>
             </>
           ) : (
             <Link

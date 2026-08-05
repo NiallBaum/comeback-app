@@ -19,6 +19,31 @@ export interface OwnedGame {
   lastPlayedAt: Date | null;
 }
 
+interface SteamPlayerSummariesResponse {
+  response: {
+    players: {
+      personaname: string;
+      avatarfull: string;
+    }[];
+  };
+}
+export interface SteamProfile {
+  personaName: string;
+  avatarUrl: string;
+}
+
+export async function getPlayerSummary(steamId: string): Promise<SteamProfile | null> {
+  const url = `https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=${process.env.STEAM_WEB_API_KEY}&steamids=${steamId}&format=json`;
+
+  const response = await fetch(url);
+  const data = (await response.json()) as SteamPlayerSummariesResponse;
+  const player = data.response.players[0];
+
+  if (!player) return null;
+
+  return { personaName: player.personaname, avatarUrl: player.avatarfull };
+}
+
 export async function getOwnedGames(steamId: string): Promise<OwnedGame[]> {
   // include_appinfo=true is required for `name` - only ever needed once the
   // dashboard started rendering a user's whole library, not just the 3

@@ -17,6 +17,14 @@ export function getSteamHeaderUrlForAppId(appId: number) {
   return `https://cdn.akamai.steamstatic.com/steam/apps/${appId}/library_hero.jpg`
 }
 
+// Steam's vertical "grid"/capsule art (the same image Steam's own library
+// grid view uses) - a real portrait asset, not a cropped landscape banner.
+// Used for the dashboard's dense Twitch-style tile grid, where a proper
+// portrait box art reads far better than stretching library_hero.jpg.
+export function getSteamGridArtUrl(appId: number) {
+  return `https://cdn.akamai.steamstatic.com/steam/apps/${appId}/library_600x900.jpg`
+}
+
 // library_hero.jpg reserves blank space on one side of the frame for the
 // Steam client's own logo overlay - PoE and CS2's art sits in the right
 // ~40% of the frame, Dota 2's spans the full width. Centralized here since

@@ -4,7 +4,6 @@ import { useState } from "react";
 import type { BuildRecommendation } from "@/types";
 import { BuildCard } from "./BuildCard";
 import { AnimatePresence, motion } from "framer-motion";
-import { getSteamHeaderUrl, getSteamHeaderArtPosition } from "@/lib/steam/assets";
 import { Card, CardContent } from "@/components/ui/card";
 import { SwordIcon } from "lucide-react";
 import { 
@@ -63,19 +62,8 @@ export function BuildPicker({ builds }: BuildPickerProps) {
     );
   }
 
-  const headerUrl = getSteamHeaderUrl(builds[0].gameId)
-
   return (
     <div>
-      <div className="relative mb-4 overflow-hidden rounded-t-lg">
-        <img
-          src={headerUrl}
-          alt=""
-          className={`aspect-[16/6] w-full object-cover ${getSteamHeaderArtPosition(builds[0].gameId)}`}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent to-40%" />
-
-      </div>
       {leagueModes.length > 1 && (
         <div className="mb-3">
           <Select value={leagueMode ?? leagueModes[0]} onValueChange={(value) => setLeagueMode(value ?? undefined)}>

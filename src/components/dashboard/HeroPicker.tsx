@@ -14,7 +14,7 @@ export function HeroPicker({ gameId, heroes, selectedHero }: HeroPickerProps) {
   return (
     <select
       defaultValue={selectedHero ?? ""}
-      onChange={(e) => router.push(`/dashboard?game=${gameId}&hero=${encodeURIComponent(e.target.value)}`)}
+      onChange={(e) => router.push(`/dashboard/${gameId}?hero=${encodeURIComponent(e.target.value)}`)}
       className="mt-3 w-full max-w-xs border border-border bg-background px-3 py-2 font-mono text-xs uppercase tracking-wide text-foreground focus:border-brand focus:outline-none"
     >
       <option value="" disabled>

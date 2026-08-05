@@ -3,7 +3,9 @@
 export type GameId = "cs2" | "dota2" | "poe";
 
 export interface PatchEntry {
-  gameId: GameId;
+  // Plain string, not GameId — generic (non-curated) library games use their
+  // raw Steam app ID as a string here, not one of the 3 curated ids.
+  gameId: string;
   patchDate: string; // ISO date
   rawTitle: string;
   rawBody: string;

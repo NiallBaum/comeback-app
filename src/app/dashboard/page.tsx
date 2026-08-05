@@ -5,7 +5,7 @@ import { SESSION_COOKIE_NAME, verifySession } from "@/lib/steam/session";
 import { getOwnedGames } from "@/lib/steam/client";
 import { SUPPORTED_GAMES } from "@/lib/games"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { getSteamHeaderUrl, getSteamHeaderArtPosition } from "@/lib/steam/assets";
+import { getSteamHeaderUrl, getSteamHeaderArtPosition, getSteamHeaderUrlForAppId } from "@/lib/steam/assets";
 import { getBuildsWithCache } from "@/lib/cache/builds";
 import { poeAdapter } from "@/lib/adapters/poe";
 import { dota2Adapter } from "@/lib/adapters/dota2";
@@ -13,7 +13,7 @@ import { BuildPicker } from "@/components/build-picker/BuildPicker";
 import { PatchNotesList } from "@/components/dashboard/PatchNotesList";
 import { PatchHighlights } from "@/components/dashboard/PatchHighlights";
 import { cs2Adapter } from "@/lib/adapters/cs2";
-import { getPatchNotesWithCache } from "@/lib/cache/patchNotes";
+import { getPatchNotesWithCache, getGenericPatchNotesWithCache } from "@/lib/cache/patchNotes";
 import { Dota2Persona } from "@/components/dashboard/Dota2Persona";
 import { getLastPlayedAtWithCache } from "@/lib/cache/lastPlayed";
 import { getPatchHighlights } from "@/lib/patchNotes";
@@ -33,6 +33,12 @@ const CLIP_PATH = "[clip-path:polygon(12px_0,100%_0,100%_calc(100%-12px),calc(10
 // (unconfirmed/manual "view anyway" games - see unmatchedGames below).
 const FALLBACK_SINCE_DAYS = 180;
 
+// Soft cap on the "rest of your library" list - a real account can own
+// hundreds of games, and this tier is patch-notes-only (no personalization),
+// so surfacing the most-recently-played ones is more useful than an
+// unbounded, mostly-irrelevant wall of titles.
+const OTHER_GAMES_LIMIT = 20;
+
 type MatchedGame = {
   id: GameId;
   name: string;
@@ -44,6 +50,13 @@ type MatchedGame = {
   // genuine play than Steam's license-record formality ever was.
   confirmedVia: "steam" | "opendota";
 };
+
+// A selected game is either one of the 3 curated (personalized) games, or
+// any other owned game rendered through the generic patch-notes-only path -
+// see src/lib/cache/patchNotes.ts's getGenericPatchNotesWithCache.
+type ActiveGameInfo =
+  | { kind: "curated"; config: GameConfig; unconfirmed: boolean }
+  | { kind: "generic"; appId: number; name: string };
 
 function daysSince(date: Date): number {
   return Math.max(0, Math.floor((Date.now() - date.getTime()) / (24 * 60 * 60 * 1000)));
@@ -64,7 +77,7 @@ async function SelectedGamePanel({
   steamId,
   heroParam,
 }: {
-  game: GameConfig;
+  game: ActiveGameInfo;
   lastPlayedAt: Date | null;
   steamId: string;
   heroParam?: string;
@@ -72,18 +85,44 @@ async function SelectedGamePanel({
   const sinceDate = (
     lastPlayedAt ?? new Date(Date.now() - FALLBACK_SINCE_DAYS * 24 * 60 * 60 * 1000)
   ).toISOString();
+
+  // Generic (non-curated) games have no adapter, no builds, no persona -
+  // just the free, universal patch-notes tier.
+  if (game.kind === "generic") {
+    const patchNotes = await getGenericPatchNotesWithCache(game.appId, sinceDate);
+    const headline = lastPlayedAt
+      ? `you last played ${game.name.toLowerCase()} ${sincePhrase(lastPlayedAt)}`
+      : `patch notes — ${game.name.toLowerCase()}`;
+    const hasHighlights = getPatchHighlights(patchNotes).length > 0;
+
+    return (
+      <>
+        <span className="mb-4 block font-mono text-xs uppercase tracking-wide text-muted-foreground">
+          // {headline}
+        </span>
+        {hasHighlights ? (
+          <PatchHighlights gameName={game.name} entries={patchNotes} />
+        ) : (
+          <PatchNotesList gameName={game.name} entries={patchNotes} />
+        )}
+      </>
+    );
+  }
+
+  const { config } = game;
+
   const [builds, patchNotes] = await Promise.all([
-    getBuildsWithCache(ADAPTERS[game.id]),
-    getPatchNotesWithCache(ADAPTERS[game.id], sinceDate),
+    getBuildsWithCache(ADAPTERS[config.id]),
+    getPatchNotesWithCache(ADAPTERS[config.id], sinceDate),
   ]);
 
   const headline = lastPlayedAt
-    ? `you last played ${game.name.toLowerCase()} ${sincePhrase(lastPlayedAt)}`
+    ? `you last played ${config.name.toLowerCase()} ${sincePhrase(lastPlayedAt)}`
     : builds.length > 0
-      ? `recommended builds — ${game.name.toLowerCase()}`
-      : `patch notes — ${game.name.toLowerCase()}`;
+      ? `recommended builds — ${config.name.toLowerCase()}`
+      : `patch notes — ${config.name.toLowerCase()}`;
 
-  const persona = game.id === "dota2" && (
+  const persona = config.id === "dota2" && (
     <Dota2Persona steamId={steamId} heroParam={heroParam} patchNotes={patchNotes} />
   );
 
@@ -91,7 +130,7 @@ async function SelectedGamePanel({
     return (
       <>
         {persona}
-        <PatchHighlights gameName={game.name} entries={patchNotes} />
+        <PatchHighlights gameName={config.name} entries={patchNotes} />
         <span className="mb-4 block font-mono text-xs uppercase tracking-wide text-muted-foreground">
           // {headline}
         </span>
@@ -114,9 +153,9 @@ async function SelectedGamePanel({
         // {headline}
       </span>
       {hasHighlights ? (
-        <PatchHighlights gameName={game.name} entries={patchNotes} />
+        <PatchHighlights gameName={config.name} entries={patchNotes} />
       ) : (
-        <PatchNotesList gameName={game.name} entries={patchNotes} />
+        <PatchNotesList gameName={config.name} entries={patchNotes} />
       )}
     </>
   );
@@ -176,14 +215,41 @@ export default async function DashboardPage({
     (config) => !matchedGames.some((game) => game.id === config.id),
   );
 
+  // Every other owned game (outside the 3 curated ones) - the free,
+  // universal, patch-notes-only tier. No adapter/personalization, just
+  // Steam's own news feed via getGenericPatchNotesWithCache. Sorted by most
+  // recently played first, since that's the most relevant ordering for
+  // "what changed while you were gone."
+  const curatedAppIds = new Set(SUPPORTED_GAMES.map((g) => g.steamAppId));
+  const otherOwnedGames = ownedGames
+    .filter((g) => !curatedAppIds.has(g.appId))
+    .sort((a, b) => (b.lastPlayedAt?.getTime() ?? 0) - (a.lastPlayedAt?.getTime() ?? 0))
+    .slice(0, OTHER_GAMES_LIMIT);
+
   const { game: requestedGameId, hero: heroParam } = await searchParams;
   const requestedMatched = matchedGames.find((g) => g.id === requestedGameId);
   const requestedUnmatched = unmatchedGames.find((g) => g.id === requestedGameId);
-  const activeGame: GameConfig | undefined = requestedMatched ?? requestedUnmatched ?? matchedGames[0];
-  const activeGameUnconfirmed = !requestedMatched && !!requestedUnmatched;
-  const activeGameLastPlayedAt = activeGameUnconfirmed
-    ? null
-    : (requestedMatched ?? matchedGames[0])?.lastPlayedAt ?? null;
+  const requestedGeneric = otherOwnedGames.find((g) => String(g.appId) === requestedGameId);
+
+  let activeGameInfo: ActiveGameInfo | undefined;
+  let activeGameLastPlayedAt: Date | null = null;
+  let activeGameUnconfirmed = false;
+
+  if (requestedMatched) {
+    activeGameInfo = { kind: "curated", config: requestedMatched, unconfirmed: false };
+    activeGameLastPlayedAt = requestedMatched.lastPlayedAt;
+  } else if (requestedUnmatched) {
+    activeGameInfo = { kind: "curated", config: requestedUnmatched, unconfirmed: true };
+    activeGameUnconfirmed = true;
+  } else if (requestedGeneric) {
+    activeGameInfo = { kind: "generic", appId: requestedGeneric.appId, name: requestedGeneric.name };
+    activeGameLastPlayedAt = requestedGeneric.lastPlayedAt;
+  } else if (matchedGames[0]) {
+    activeGameInfo = { kind: "curated", config: matchedGames[0], unconfirmed: false };
+    activeGameLastPlayedAt = matchedGames[0].lastPlayedAt;
+  }
+
+  const activeGameName = activeGameInfo?.kind === "curated" ? activeGameInfo.config.name : activeGameInfo?.name;
 
   return (
     <main className="max-w-[1440px] w-full mx-auto px-4 py-8">
@@ -195,7 +261,7 @@ export default async function DashboardPage({
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {SUPPORTED_GAMES.map((config) => {
           const matched = matchedGames.find((game) => game.id === config.id);
-          const isActive = config.id === activeGame?.id;
+          const isActive = activeGameInfo?.kind === "curated" && activeGameInfo.config.id === config.id;
           return (
             <Link key={config.id} href={`/dashboard?game=${config.id}`} className="block">
               <div
@@ -246,15 +312,49 @@ export default async function DashboardPage({
         })}
       </div>
 
-      {activeGame && (
+      {otherOwnedGames.length > 0 && (
+        <div className="mt-10">
+          <span className="mb-3 block font-mono text-xs uppercase tracking-wide text-muted-foreground">
+            // rest of your library — patch notes, free
+          </span>
+          <div className="divide-y divide-border border border-border">
+            {otherOwnedGames.map((owned) => {
+              const isActive = activeGameInfo?.kind === "generic" && activeGameInfo.appId === owned.appId;
+              return (
+                <Link
+                  key={owned.appId}
+                  href={`/dashboard?game=${owned.appId}`}
+                  className={`flex items-center gap-3 px-3 py-2 transition-colors ${
+                    isActive ? "bg-brand/10" : "hover:bg-muted/50"
+                  }`}
+                >
+                  <img
+                    src={getSteamHeaderUrlForAppId(owned.appId)}
+                    alt=""
+                    className="h-10 w-16 shrink-0 rounded-sm object-cover"
+                  />
+                  <span className="flex-1 truncate font-medium">{owned.name}</span>
+                  {owned.lastPlayedAt && (
+                    <span className="shrink-0 text-sm text-muted-foreground">
+                      last played {sincePhrase(owned.lastPlayedAt)}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {activeGameInfo && (
         <div className="mt-12 max-w-[900px] mx-auto">
           {activeGameUnconfirmed && (
             <p className="mb-6 font-mono text-xs text-muted-foreground">
-              <span className="text-brand">// preview mode</span> — Steam hasn&apos;t confirmed {activeGame.name} is linked to your account, but everything below comes from a different, independent source, so it&apos;s just as real as any other game.
+              <span className="text-brand">// preview mode</span> — Steam hasn&apos;t confirmed {activeGameName} is linked to your account, but everything below comes from a different, independent source, so it&apos;s just as real as any other game.
             </p>
           )}
           <SelectedGamePanel
-            game={activeGame}
+            game={activeGameInfo}
             lastPlayedAt={activeGameLastPlayedAt}
             steamId={session.steamId}
             heroParam={heroParam}

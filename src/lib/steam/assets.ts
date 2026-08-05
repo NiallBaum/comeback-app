@@ -7,9 +7,14 @@ export const STEAM_APPIDS: Record<GameId, number> = {
 }
 
 export function getSteamHeaderUrl(gameId: GameId) {
-  const appid =  STEAM_APPIDS[gameId]
+  return getSteamHeaderUrlForAppId(STEAM_APPIDS[gameId]);
+}
 
-  return `https://cdn.akamai.steamstatic.com/steam/apps/${appid}/library_hero.jpg`
+// Same CDN convention, but for any owned game's raw app id - not just the
+// 3 curated ones. Valve's library_hero.jpg exists for effectively every
+// app with store-page assets, no per-game lookup needed.
+export function getSteamHeaderUrlForAppId(appId: number) {
+  return `https://cdn.akamai.steamstatic.com/steam/apps/${appId}/library_hero.jpg`
 }
 
 // library_hero.jpg reserves blank space on one side of the frame for the

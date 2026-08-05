@@ -6,7 +6,11 @@ export interface GameConfig {
   steamAppId: number;
 }
 
-// Section 2: launch scope is fixed at these 3 titles — do not generalize to "any Steam game" for v1
+// The curated "deep dive" games — real personalized builds/stats on top of
+// patch notes, via a bespoke GameAdapter each. Every other owned game still
+// gets a free, generic patch-notes-only panel (see getGenericPatchNotesWithCache
+// in src/lib/cache/patchNotes.ts) — this list is no longer the full set of
+// games the dashboard supports, just the ones with extra personalization.
 export const SUPPORTED_GAMES: GameConfig[] = [
   { id: "cs2", name: "Counter-Strike 2", steamAppId: 730 },
   { id: "dota2", name: "Dota 2", steamAppId: 570 },

@@ -41,23 +41,33 @@ export async function Dota2Persona({ steamId, heroParam, patchNotes }: Dota2Pers
     }
   }
 
+  const heroes = (await getHeroStats()).map((hero) => hero.localized_name).sort();
+
   if (profile && heroName) {
     return (
       <div className="mb-8">
         <FadeIn transitionKey={`profile-${heroName}`}>
           <PlaystyleProfileCard heroName={heroName} profile={profile} />
-          {heroHighlights.length > 0 && (
-            <div className="mt-3 border-t border-border pt-3">
+          <div className="mt-3 space-y-3 border-t border-border pt-3">
+            {heroHighlights.length > 0 && (
+              <div>
+                <span className="mb-2 block font-mono text-xs uppercase tracking-wide text-muted-foreground">
+                  // what changed for {heroName.toLowerCase()}
+                </span>
+                <ul className="space-y-1 font-mono text-sm text-add">
+                  {heroHighlights.map((text) => (
+                    <li key={text}>+ {text}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            <div>
               <span className="mb-2 block font-mono text-xs uppercase tracking-wide text-muted-foreground">
-                // what changed for {heroName.toLowerCase()}
+                // switch hero
               </span>
-              <ul className="space-y-1 font-mono text-sm text-add">
-                {heroHighlights.map((text) => (
-                  <li key={text}>+ {text}</li>
-                ))}
-              </ul>
+              <HeroPicker gameId="dota2" heroes={heroes} selectedHero={heroName} />
             </div>
-          )}
+          </div>
         </FadeIn>
       </div>
     );
@@ -67,7 +77,6 @@ export async function Dota2Persona({ steamId, heroParam, patchNotes }: Dota2Pers
   // (auto or manual) had no real match data. Same card shape either way, so
   // switching between "no hero yet" and "this hero has no data" only ever
   // changes the message, never the layout.
-  const heroes = (await getHeroStats()).map((hero) => hero.localized_name).sort();
 
   return (
     <div className="mb-8">

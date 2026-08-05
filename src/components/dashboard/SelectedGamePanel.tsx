@@ -65,9 +65,6 @@ function GameBanner({ imageUrl, artPosition }: { imageUrl: string; artPosition: 
 function GameIntro({ gameName, lastPlayedAt }: { gameName: string; lastPlayedAt: Date | null }) {
   return (
     <div className="mb-6 max-w-2xl">
-      <span className="mb-2 block font-mono text-xs uppercase tracking-wide text-brand">
-        // whats changed
-      </span>
       <p className="text-sm text-muted-foreground">
         {lastPlayedAt ? (
           <>
@@ -141,9 +138,13 @@ export async function SelectedGamePanel({
         {intro}
         <ReinstallRecapTeaser gameName={config.name} />
         <PatchHighlights gameName={config.name} entries={patchNotes} />
-        <span className="mb-4 block font-mono text-xs uppercase tracking-wide text-muted-foreground">
+        <span className="mb-2 block font-mono text-xs uppercase tracking-wide text-muted-foreground">
           // recommended builds — {config.name.toLowerCase()}
         </span>
+        <p className="mb-4 max-w-2xl text-sm text-muted-foreground">
+          What&apos;s performing well right now, not picks tailored to your own hero or match history — a snapshot of
+          the current meta, sourced from real data where we can and community consensus where we can&apos;t.
+        </p>
         <BuildPicker builds={builds} />
       </>
     );

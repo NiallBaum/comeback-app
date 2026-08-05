@@ -47,6 +47,10 @@ export async function Dota2Persona({ steamId, heroParam, patchNotes }: Dota2Pers
     return (
       <div className="mb-8">
         <FadeIn transitionKey={`profile-${heroName}`}>
+          <p className="mb-4 text-sm text-muted-foreground">
+            Your main looks like <span className="font-medium text-brand">{heroName}</span> — here&apos;s
+            what&apos;s changed for them. Playing someone else now? Pick a different hero below.
+          </p>
           <PlaystyleProfileCard heroName={heroName} profile={profile} />
           <div className="mt-3 space-y-3 border-t border-border pt-3">
             {heroHighlights.length > 0 && (

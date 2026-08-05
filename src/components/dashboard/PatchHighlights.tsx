@@ -15,7 +15,7 @@ export function PatchHighlights({ gameName, entries }: PatchHighlightsProps) {
   return (
     <div className="mb-10">
       <span className="mb-3 block font-mono text-xs uppercase tracking-wide text-muted-foreground">
-        // what changed — {gameName.toLowerCase()}
+        // what changed 
       </span>
       <div className="flex flex-col gap-1 font-mono text-sm">
         {highlights.map((line, i) => (

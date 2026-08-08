@@ -158,4 +158,27 @@
 @media (prefers-reduced-motion: reduce) {
   .animate-reveal { animation: none !important; opacity: 1 !important; }
   .animate-cta-blink { animation: none !important; }
+  .skeleton::after { animation: none !important; }
+}
+
+/* Loading-state building block: a muted-fill shape with a diagonal light
+   sweep, instead of a flat pulse - reads as "data streaming in" rather than
+   a generic gray box, matching the terminal-log aesthetic used everywhere
+   else on the site. Plain class (not the `animate-*` Tailwind-token
+   convention used above) since it's only ever used via this one class. */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--muted);
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(75deg, transparent 40%, oklch(1 0 0 / 8%) 50%, transparent 60%);
+  animation: skeleton-sweep 1.8s ease-in-out infinite;
+}
+@keyframes skeleton-sweep {
+  to { transform: translateX(100%); }
 }

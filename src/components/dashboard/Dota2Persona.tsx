@@ -45,7 +45,13 @@ export async function Dota2Persona({ steamId, heroParam, patchNotes }: Dota2Pers
     }
   }
 
-  const heroes = (await getHeroStats()).map((hero) => hero.localized_name).sort();
+  let heroes: string[] = [];
+  try {
+    heroes = (await getHeroStats()).map((hero) => hero.localized_name).sort();
+  } catch {
+    // OpenDota's heroStats endpoint down/unreachable - the picker just shows
+    // no options rather than crashing the whole page.
+  }
 
   if (profile && heroName) {
     return (
@@ -95,11 +101,13 @@ export async function Dota2Persona({ steamId, heroParam, patchNotes }: Dota2Pers
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              {heroName
-                ? `No match data found for ${heroName} on this account — try a different hero.`
-                : `Can't detect your main hero yet — make sure "Expose Public Match Data" is enabled in Dota 2's client settings, or pick a hero below to preview their stats and patch notes anyway.`}
+              {heroes.length === 0
+                ? "Hero data is temporarily unavailable — OpenDota isn't responding right now. Try again in a bit."
+                : heroName
+                  ? `No match data found for ${heroName} on this account — try a different hero.`
+                  : `Can't detect your main hero yet — make sure "Expose Public Match Data" is enabled in Dota 2's client settings, or pick a hero below to preview their stats and patch notes anyway.`}
             </p>
-            <HeroPicker gameId="dota2" heroes={heroes} selectedHero={heroName} />
+            {heroes.length > 0 && <HeroPicker gameId="dota2" heroes={heroes} selectedHero={heroName} />}
           </CardContent>
         </Card>
         {heroHighlights.length > 0 && (

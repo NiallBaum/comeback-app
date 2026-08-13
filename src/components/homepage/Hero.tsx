@@ -59,9 +59,9 @@ export function Hero() {
           You left. The meta didn&rsquo;t.
         </h1>
         <p className="mb-8 max-w-[34ch] text-muted-foreground">
-          Connect Steam and Comeback reads back everything that changed in the games you dropped &mdash; then hands you a build that already accounts for it.
+          Sign up and Comeback reads back everything that changed in the games you dropped &mdash; then hands you a build that already accounts for it.
         </p>
-        <CtaButton href="/api/auth/steam/login">connect_steam</CtaButton>
+        <CtaButton href="/sign-up">sign_up</CtaButton>
       </div>
       <SampleBriefingPanel />
     </section>

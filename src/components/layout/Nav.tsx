@@ -1,16 +1,14 @@
 import Link from "next/link";
-import { cookies } from "next/headers";
-import { SESSION_COOKIE_NAME, verifySession } from "@/lib/steam/session";
+import { headers } from "next/headers";
+import { auth } from "@/lib/auth/server";
 import { buttonVariants } from "@/components/ui/button";
 import { Logo } from "@/components/layout/Logo";
 
 const SECTION_LINKS = [{ href: "/#games", label: "Games" }];
 
 export async function Nav() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
-  const session = token ? await verifySession(token) : null;
-  const isLoggedIn = session?.status === "valid";
+  const session = await auth.api.getSession({ headers: await headers() });
+  const isLoggedIn = !!session;
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur">
@@ -38,7 +36,7 @@ export async function Nav() {
               >
                 Dashboard
               </Link>
-              <form action="/api/auth/steam/logout" method="POST">
+              <form action="/api/logout" method="POST">
                 <button type="submit" className={buttonVariants({ variant: "ghost", size: "sm" })}>
                   Sign out
                 </button>
@@ -46,13 +44,13 @@ export async function Nav() {
             </>
           ) : (
             <Link
-              href="/api/auth/steam/login"
+              href="/sign-up"
               className={buttonVariants({
                 size: "sm",
                 className: "bg-brand text-brand-foreground hover:bg-brand/90",
               })}
             >
-              Connect Steam
+              Sign up
             </Link>
           )}
         </div>

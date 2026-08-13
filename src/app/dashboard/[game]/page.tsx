@@ -1,7 +1,7 @@
-import { cookies } from "next/headers";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { SESSION_COOKIE_NAME, verifySession } from "@/lib/steam/session";
+import { auth } from "@/lib/auth/server";
 import { SUPPORTED_GAMES } from "@/lib/games";
 import { resolveLibrary } from "@/lib/dashboard/library";
 import { SelectedGamePanel, type ActiveGameInfo } from "@/components/dashboard/SelectedGamePanel";
@@ -13,22 +13,23 @@ export default async function GamePage({
   params: Promise<{ game: string }>;
   searchParams: Promise<{ hero?: string }>;
 }) {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
-
-  if (!token) {
-    redirect("/api/auth/steam/login");
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) {
+    redirect("/sign-up");
   }
 
-  const session = await verifySession(token);
-  if (session.status !== "valid") {
-    redirect("/api/auth/steam/login");
+  const steamId = session.user.steamId;
+  if (!steamId) {
+    // Same "not linked yet" case as the library grid - see the comment
+    // there for why this just bounces to /sign-up rather than a settings
+    // flow that doesn't exist yet.
+    redirect("/sign-up");
   }
 
   const { game: gameParam } = await params;
   const { hero: heroParam } = await searchParams;
 
-  const { matchedGames, unmatchedGames, otherOwnedGames } = await resolveLibrary(session.steamId);
+  const { matchedGames, unmatchedGames, otherOwnedGames } = await resolveLibrary(steamId);
 
   const requestedMatched = matchedGames.find((g) => g.id === gameParam);
   const requestedUnmatched = unmatchedGames.find((g) => g.id === gameParam);
@@ -96,7 +97,7 @@ export default async function GamePage({
       <SelectedGamePanel
         game={activeGameInfo}
         lastPlayedAt={activeGameLastPlayedAt}
-        steamId={session.steamId}
+        steamId={steamId}
         heroParam={heroParam}
       />
     </main>

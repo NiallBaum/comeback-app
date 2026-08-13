@@ -1,25 +1,27 @@
-import { cookies } from "next/headers";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { SESSION_COOKIE_NAME, verifySession } from "@/lib/steam/session";
+import { auth } from "@/lib/auth/server";
 import { SUPPORTED_GAMES } from "@/lib/games"
 import { getSteamHeaderUrl, getSteamHeaderArtPosition, getSteamGridArtUrl, getSteamHeaderUrlForAppId } from "@/lib/steam/assets";
 import { resolveLibrary } from "@/lib/dashboard/library";
 import { GameLibraryGrid, type LibraryEntry } from "@/components/dashboard/GameLibraryGrid";
 
 export default async function DashboardPage() {
-  const cookieStore = await cookies()
-  const token = cookieStore.get(SESSION_COOKIE_NAME)?.value
-
-  if (!token) {
-    redirect("/api/auth/steam/login");
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) {
+    redirect("/sign-up");
   }
 
-  const session = await verifySession(token);
-  if (session.status !== "valid") {
-    redirect("/api/auth/steam/login")
+  const steamId = session.user.steamId;
+  if (!steamId) {
+    // Signed in (e.g. via email) but hasn't connected Steam yet - nothing
+    // to show until they do. Linking a platform to an already-signed-in
+    // account isn't built yet (see plan), so this just sends them back to
+    // start a Steam connection, same as a fresh visitor for now.
+    redirect("/sign-up");
   }
 
-  const { matchedGames, otherOwnedGames } = await resolveLibrary(session.steamId);
+  const { matchedGames, otherOwnedGames } = await resolveLibrary(steamId);
 
   const curatedEntries: LibraryEntry[] = SUPPORTED_GAMES.map((config) => {
     const matched = matchedGames.find((game) => game.id === config.id);

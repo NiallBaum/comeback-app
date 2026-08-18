@@ -1,6 +1,6 @@
 import type { PatchEntry, BuildRecommendation } from "@/types";
 import type { GameAdapter } from "../types";
-import { decodeSearchResult, parseDpsString } from "./ninjaProtobuf"
+import { decodeSearchResult, findDpsTotalColumn, parseDpsString } from "./ninjaProtobuf"
 import * as cheerio from "cheerio";
 
 interface PoeLeague {
@@ -118,18 +118,17 @@ async function getTopCharacters(league: PoeLeague, count: number): Promise<TopCh
   const buf = Buffer.from(await response.arrayBuffer());
   const result = decodeSearchResult(buf);
 
-  const dpsField = result.fields.find((f) => f.type === "dps");
-  const names = result.valueLists["name"];
-  const accounts = result.valueLists["account"];
-  const dps = dpsField ? result.valueLists[dpsField.valueListIds[0]] : undefined;
+  const names = result.columns["name"]?.stringValues;
+  const accounts = result.columns["account"]?.stringValues;
+  const dps = findDpsTotalColumn(result)?.stringValues;
   if (!names?.length) return [];
 
   const ranked = names
-    .map((_, i) => ({ index: i, dps: parseDpsString(dps?.[i]?.str), dpsLabel: dps?.[i]?.str }))
+    .map((_, i) => ({ index: i, dps: parseDpsString(dps?.[i]), dpsLabel: dps?.[i] }))
     .sort((a, b) => b.dps - a.dps)
     .slice(0, count);
 
-  return ranked.map(({ index, dpsLabel }) => ({ account: accounts[index].str!, name: names[index].str!, dpsLabel }));
+  return ranked.map(({ index, dpsLabel }) => ({ account: accounts![index], name: names[index], dpsLabel }));
 }
 
 
@@ -144,25 +143,24 @@ async function findTopCharacter(target: BuildTarget): Promise<TopCharacter | nul
   const buf = Buffer.from(await response.arrayBuffer());
   const result = decodeSearchResult(buf);
 
-  const dpsField = result.fields.find((f) => f.type === "dps");
-  const names = result.valueLists["name"];
-  const accounts = result.valueLists["account"];
-  const dps = dpsField ? result.valueLists[dpsField.valueListIds[0]] : undefined;
+  const names = result.columns["name"]?.stringValues;
+  const accounts = result.columns["account"]?.stringValues;
+  const dps = findDpsTotalColumn(result)?.stringValues;
   if (!names?.length) return null;
 
   let bestIndex = 0;
   let bestDps = -Infinity;
   let bestDpsLabel: string | undefined;
   for (let i = 0; i < names.length; i++) {
-    const value = parseDpsString(dps?.[i]?.str);
+    const value = parseDpsString(dps?.[i]);
     if (value > bestDps) {
       bestDps = value;
       bestIndex = i;
-      bestDpsLabel = dps?.[i]?.str;
+      bestDpsLabel = dps?.[i];
     }
   }
 
-  return { account: accounts[bestIndex].str!, name: names[bestIndex].str!, dpsLabel: bestDpsLabel };
+  return { account: accounts![bestIndex], name: names[bestIndex], dpsLabel: bestDpsLabel };
 }
 
 async function getCharacterBuild(league: PoeLeague, character: TopCharacter): Promise<CharacterResponse | null> {

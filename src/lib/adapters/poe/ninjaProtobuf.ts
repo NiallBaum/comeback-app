@@ -1,4 +1,4 @@
-type FieldKind = "scalar" | "message" | "map";
+type FieldKind = "scalar" | "message" | "map" | "packedVarint";
 
 interface FieldDef {
   name: string;
@@ -20,6 +20,17 @@ function readVarint(buf: Buffer, pos: number): [bigint, number] {
     shift += BigInt(7);
   } while (byte & 0x80);
   return [result, pos];
+}
+
+function decodePackedVarints(buf: Buffer): number[] {
+  const values: number[] = [];
+  let pos = 0;
+  while (pos < buf.length) {
+    let v: bigint;
+    [v, pos] = readVarint(buf, pos);
+    values.push(Number(v));
+  }
+  return values;
 }
 
 function decodeMessage(
@@ -57,6 +68,8 @@ function decodeMessage(
         value = decodeMessage(slice, registry[fieldDef.message!], registry);
       } else if (fieldDef?.kind === "map") {
         value = decodeMessage(slice, MAP_ENTRY_SCHEMA, registry);
+      } else if (fieldDef?.kind === "packedVarint") {
+        value = decodePackedVarints(slice);
       } else {
         value = slice.toString("utf8");
       }
@@ -92,13 +105,13 @@ const REGISTRY: Record<string, MessageSchema> = {
     2: { name: "dimensions", kind: "message", message: "SearchResultDimension", repeated: true },
     3: { name: "integerDimensions", kind: "message", message: "SearchResultIntegerDimension", repeated: true },
     4: { name: "performancePoints", kind: "message", message: "SearchResultPerformance", repeated: true },
-    5: { name: "valueLists", kind: "message", message: "SearchResultValueList", repeated: true },
     6: { name: "dictionaries", kind: "message", message: "SearchResultDictionaryReference", repeated: true },
     7: { name: "fields", kind: "message", message: "SearchResultField", repeated: true },
     8: { name: "sections", kind: "message", message: "SearchResultSection", repeated: true },
     9: { name: "fieldDescriptors", kind: "message", message: "SearchResultFieldDescriptor", repeated: true },
     10: { name: "defaultFieldIds", kind: "scalar", repeated: true },
     11: { name: "floatDimensions", kind: "message", message: "SearchResultFloatDimension", repeated: true },
+    12: { name: "columns", kind: "message", message: "SearchResultColumn", repeated: true },
   },
   SearchResultField: {
     1: { name: "id", kind: "scalar" },
@@ -143,16 +156,20 @@ const REGISTRY: Record<string, MessageSchema> = {
     1: { name: "name", kind: "scalar" },
     2: { name: "ms", kind: "scalar" },
   },
-  SearchResultValueList: {
+  // Replaces the old SearchResultValueList/SearchResultValue shape — poe.ninja moved from
+  // named value-lists to a self-describing columnar layout (one SearchResultColumn per
+  // field, values aligned by row index across columns). Fields 3/4/5/13 exist on the wire
+  // (variant/type markers, row count) but aren't needed by anything we read today.
+  SearchResultColumn: {
     1: { name: "id", kind: "scalar" },
-    2: { name: "values", kind: "message", message: "SearchResultValue", repeated: true },
+    2: { name: "group", kind: "scalar" },
+    6: { name: "intValues", kind: "packedVarint" },
+    7: { name: "stringValues", kind: "scalar", repeated: true },
+    9: { name: "listValues", kind: "message", message: "SearchResultIntList", repeated: true },
+    11: { name: "dictionaryHash", kind: "scalar" },
   },
-  SearchResultValue: {
-    1: { name: "str", kind: "scalar" },
-    2: { name: "number", kind: "scalar" },
-    3: { name: "numbers", kind: "scalar", repeated: true },
-    4: { name: "strs", kind: "scalar", repeated: true },
-    5: { name: "boolean", kind: "scalar" },
+  SearchResultIntList: {
+    1: { name: "values", kind: "packedVarint" },
   },
   SearchResultDictionaryReference: {
     1: { name: "id", kind: "scalar" },
@@ -190,60 +207,54 @@ export function decodeDictionary(buf: Buffer): NinjaDictionary {
   };
 }
 
-export interface SearchValue {
-  str?: string;
-  number?: number;
-  numbers?: number[];
-  strs?: string[];
-  boolean?: boolean;
-}
-
-export interface SearchField {
+// A column's payload lands in exactly one of these three, depending on the value type
+// poe.ninja sent it as (string text, plain/dictionary-encoded ints, or a per-row list of
+// ints — e.g. a character's equipped skill gems).
+export interface DecodedColumn {
   id: string;
-  type: string;
-  name: string;
-  valueListIds: string[];
-}
-
-export interface DictionaryRef {
-  id: string;
-  hash: string;
+  group: string;
+  dictionaryHash?: string;
+  stringValues?: string[];
+  intValues?: number[];
+  listValues?: number[][];
 }
 
 export interface DecodedSearchResult {
   total: number;
-  fields: SearchField[];
-  valueLists: Record<string, SearchValue[]>;
-  dictionaryRefs: DictionaryRef[];
+  columns: Record<string, DecodedColumn>;
 }
 
 export function decodeSearchResult(buf: Buffer): DecodedSearchResult {
   const raw = decodeMessage(buf, REGISTRY.NinjaSearchResult, REGISTRY);
   const result = raw.result as Record<string, unknown>;
 
-  const fields = ((result.fields as Record<string, unknown>[]) ?? []).map((f) => ({
-    id: f.id as string,
-    type: f.type as string,
-    name: f.name as string,
-    valueListIds: (f.valueListIds as string[]) ?? [],
-  }));
-
-  const valueLists: Record<string, SearchValue[]> = {};
-  for (const vl of (result.valueLists as Record<string, unknown>[]) ?? []) {
-    valueLists[vl.id as string] = (vl.values as SearchValue[]) ?? [];
+  const columns: Record<string, DecodedColumn> = {};
+  for (const col of (result.columns as Record<string, unknown>[]) ?? []) {
+    const id = col.id as string;
+    columns[id] = {
+      id,
+      group: col.group as string,
+      dictionaryHash: col.dictionaryHash as string | undefined,
+      stringValues: col.stringValues as string[] | undefined,
+      intValues: col.intValues as number[] | undefined,
+      listValues: (col.listValues as { values?: number[] }[] | undefined)?.map((l) => l.values ?? []),
+    };
   }
-
-  const dictionaryRefs = ((result.dictionaries as Record<string, unknown>[]) ?? []).map((d) => ({
-    id: d.id as string,
-    hash: d.hash as string,
-  }));
 
   return {
     total: result.total as number,
-    fields,
-    valueLists,
-    dictionaryRefs,
+    columns,
   };
+}
+
+// The "dps" column group gets renamed to "dps-<Skill Name>" whenever a search is filtered
+// by skill (poe.ninja's same dynamic-field-name behavior as before, just baked into the
+// column id now instead of a separate fields[] lookup) — so match by prefix/suffix rather
+// than a fixed id.
+export function findDpsTotalColumn(result: DecodedSearchResult): DecodedColumn | undefined {
+  return Object.values(result.columns).find(
+    (c) => c.group.startsWith("dps") && c.id.endsWith(".total")
+  );
 }
 
 export function parseDpsString(str: string | undefined) : number {

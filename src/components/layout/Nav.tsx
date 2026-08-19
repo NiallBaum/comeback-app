@@ -27,7 +27,7 @@ export async function Nav() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           {isLoggedIn ? (
             <>
               <Link
@@ -49,15 +49,23 @@ export async function Nav() {
               </form>
             </>
           ) : (
-            <Link
-              href="/sign-up"
-              className={buttonVariants({
-                size: "sm",
-                className: "bg-brand text-brand-foreground hover:bg-brand/90",
-              })}
-            >
-              Sign up
-            </Link>
+            <>
+              <Link
+                href="/sign-up?intent=sign-in"
+                className={buttonVariants({ variant: "ghost", size: "sm" })}
+              >
+                Sign in
+              </Link>
+              <Link
+                href="/sign-up"
+                className={buttonVariants({
+                  size: "sm",
+                  className: "bg-brand text-brand-foreground hover:bg-brand/90",
+                })}
+              >
+                Sign up
+              </Link>
+            </>
           )}
         </div>
       </div>

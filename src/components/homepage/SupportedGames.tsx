@@ -36,16 +36,29 @@ const SHOWCASE: Array<{
   },
 ];
 
-const COMING_SOON: Array<{ name: string; tag: string; note: string }> = [
+const COMING_SOON: Array<{
+  id: string;
+  tag: string;
+  tagColor: string;
+  name: string;
+  note: string;
+  logoUrl: string;
+}> = [
   {
-    name: "League of Legends",
+    id: "lol",
     tag: "MOBA",
+    tagColor: "text-[#8a6dd6]",
+    name: "League of Legends",
     note: "Main-champion detection and playstyle stats — the same personal treatment already live for Dota 2.",
+    logoUrl: "https://upload.wikimedia.org/wikipedia/commons/d/d8/League_of_Legends_2019_vector.svg",
   },
   {
-    name: "Valorant",
+    id: "valorant",
     tag: "Tactical shooter",
+    tagColor: "text-[#ff4655]",
+    name: "Valorant",
     note: "Your most-used agent and weapon, and exactly what changed for them since you last played.",
+    logoUrl: "https://upload.wikimedia.org/wikipedia/commons/f/fc/Valorant_logo_-_pink_color_version.svg",
   },
 ];
 
@@ -161,26 +174,40 @@ export function SupportedGames() {
             </div>
           );
         })}
-      </div>
 
-      <div className="mt-14 grid grid-cols-1 gap-5 sm:grid-cols-2">
-        {COMING_SOON.map((entry) => (
-          <div
-            key={entry.name}
-            className="border border-border bg-card p-5 [clip-path:polygon(12px_0,100%_0,100%_calc(100%-12px),calc(100%-12px)_100%,0_100%,0_12px)]"
-          >
-            <div className="mb-2 flex items-center justify-between">
-              <span className="font-mono text-xs uppercase tracking-wide text-muted-foreground">
-                {entry.tag}
-              </span>
-              <span className="border border-border px-2 py-0.5 font-mono text-[0.62rem] uppercase tracking-wide text-muted-foreground">
-                Coming soon
-              </span>
+        {COMING_SOON.map((entry, i) => {
+          const index = SHOWCASE.length + i;
+          return (
+            <div
+              key={entry.id}
+              className="scroll-module grid grid-cols-1 items-center gap-8 md:grid-cols-2 md:gap-11"
+            >
+              <div
+                className={`relative flex aspect-video items-center justify-center overflow-hidden bg-card ${index % 2 === 1 ? "md:order-2" : ""}`}
+              >
+                <img
+                  src={entry.logoUrl}
+                  alt={entry.name}
+                  className="scroll-module-art w-2/5 max-w-40 object-contain opacity-90"
+                />
+              </div>
+              <div className={index % 2 === 1 ? "md:order-1" : ""}>
+                <div className={`mb-2 font-mono text-xs uppercase tracking-wide ${entry.tagColor}`}>
+                  {entry.tag} &middot; {entry.name}
+                </div>
+                <h3 className="mb-3 text-2xl font-bold tracking-tight">{entry.name}</h3>
+                <div className="mb-4 font-mono text-sm text-muted-foreground before:content-['~_']">
+                  {entry.note}
+                </div>
+                <div className="border border-border bg-card p-5 [clip-path:polygon(12px_0,100%_0,100%_calc(100%-12px),calc(100%-12px)_100%,0_100%,0_12px)]">
+                  <span className="font-mono text-xs uppercase tracking-wide text-muted-foreground">
+                    Coming soon
+                  </span>
+                </div>
+              </div>
             </div>
-            <h4 className="mb-2 text-lg font-bold tracking-tight">{entry.name}</h4>
-            <p className="text-sm text-muted-foreground">{entry.note}</p>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </section>
   );

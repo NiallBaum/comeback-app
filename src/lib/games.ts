@@ -14,5 +14,4 @@ export interface GameConfig {
 export const SUPPORTED_GAMES: GameConfig[] = [
   { id: "cs2", name: "Counter-Strike 2", steamAppId: 730 },
   { id: "dota2", name: "Dota 2", steamAppId: 570 },
-  { id: "poe", name: "Path of Exile", steamAppId: 238960 },
 ];

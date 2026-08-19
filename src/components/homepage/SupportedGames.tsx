@@ -6,7 +6,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import { SUPPORTED_GAMES } from "@/lib/games";
 import { getSteamHeaderUrl, getSteamHeaderArtPosition } from "@/lib/steam/assets";
-import { mockPoeBuilds, mockDota2Builds, mockCs2Builds } from "@/lib/mock/builds";
+import { mockDota2Builds, mockCs2Builds } from "@/lib/mock/builds";
 import type { BuildRecommendation, GameId } from "@/types";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -26,14 +26,6 @@ const SHOWCASE: Array<{
   neutral?: boolean;
   build: BuildRecommendation;
 }> = [
-  {
-    id: "poe",
-    tag: "ARPG",
-    tagColor: "text-brand",
-    heading: "Ladder data, not opinions",
-    diffline: mockPoeBuilds[0].whyItWorksNow,
-    build: mockPoeBuilds[0],
-  },
   {
     id: "dota2",
     tag: "MOBA",
@@ -98,7 +90,7 @@ export function SupportedGames() {
         // the deep dive
       </span>
       <p className="mt-3 max-w-2xl text-muted-foreground">
-        Path of Exile, Dota 2, and CS2 get more than a changelog — real builds and stats, sourced from live data wherever we can get it.
+        Dota 2 and CS2 get more than a changelog — real builds and stats, sourced from live data wherever we can get it.
       </p>
       <div ref={containerRef} className="mt-8 flex flex-col gap-14">
         {SHOWCASE.map((entry, index) => {

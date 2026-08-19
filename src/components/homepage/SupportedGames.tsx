@@ -6,7 +6,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import { SUPPORTED_GAMES } from "@/lib/games";
 import { getSteamHeaderUrl, getSteamHeaderArtPosition } from "@/lib/steam/assets";
-import { mockDota2Builds, mockCs2Builds } from "@/lib/mock/builds";
+import { mockDota2Builds } from "@/lib/mock/builds";
 import type { BuildRecommendation, GameId } from "@/types";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -34,13 +34,18 @@ const SHOWCASE: Array<{
     diffline: mockDota2Builds[0].whyItWorksNow,
     build: mockDota2Builds[0],
   },
+];
+
+const COMING_SOON: Array<{ name: string; tag: string; note: string }> = [
   {
-    id: "cs2",
+    name: "League of Legends",
+    tag: "MOBA",
+    note: "Main-champion detection and playstyle stats — the same personal treatment already live for Dota 2.",
+  },
+  {
+    name: "Valorant",
     tag: "Tactical shooter",
-    tagColor: "text-[#d99a3f]",
-    heading: "No builds to invent, so we don't",
-    diffline: mockCs2Builds[0].whyItWorksNow,
-    build: mockCs2Builds[0],
+    note: "Your most-used agent and weapon, and exactly what changed for them since you last played.",
   },
 ];
 
@@ -90,7 +95,7 @@ export function SupportedGames() {
         // the deep dive
       </span>
       <p className="mt-3 max-w-2xl text-muted-foreground">
-        Dota 2 and CS2 get more than a changelog — real builds and stats, sourced from live data wherever we can get it.
+        Dota 2 gets more than a changelog — real builds and stats, sourced from live data wherever we can get it. League of Legends and Valorant are next.
       </p>
       <div ref={containerRef} className="mt-8 flex flex-col gap-14">
         {SHOWCASE.map((entry, index) => {
@@ -156,6 +161,26 @@ export function SupportedGames() {
             </div>
           );
         })}
+      </div>
+
+      <div className="mt-14 grid grid-cols-1 gap-5 sm:grid-cols-2">
+        {COMING_SOON.map((entry) => (
+          <div
+            key={entry.name}
+            className="border border-border bg-card p-5 [clip-path:polygon(12px_0,100%_0,100%_calc(100%-12px),calc(100%-12px)_100%,0_100%,0_12px)]"
+          >
+            <div className="mb-2 flex items-center justify-between">
+              <span className="font-mono text-xs uppercase tracking-wide text-muted-foreground">
+                {entry.tag}
+              </span>
+              <span className="border border-border px-2 py-0.5 font-mono text-[0.62rem] uppercase tracking-wide text-muted-foreground">
+                Coming soon
+              </span>
+            </div>
+            <h4 className="mb-2 text-lg font-bold tracking-tight">{entry.name}</h4>
+            <p className="text-sm text-muted-foreground">{entry.note}</p>
+          </div>
+        ))}
       </div>
     </section>
   );

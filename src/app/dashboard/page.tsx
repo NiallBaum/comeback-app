@@ -52,11 +52,41 @@ export default async function DashboardPage() {
       artPosition: getSteamHeaderArtPosition(config.id),
       lastPlayedAt: matched?.lastPlayedAt ?? null,
       curated: true,
+      featured: true,
       matched: !!matched,
       href: `/dashboard/${config.id}`,
       isActive: false,
     };
   });
+
+  // Real deep-dive games with no adapter yet - shown so the dashboard tells
+  // the same story as the homepage, not just Dota 2 in isolation.
+  const comingSoonEntries: LibraryEntry[] = [
+    {
+      key: "lol",
+      name: "League of Legends",
+      logoUrl: "https://upload.wikimedia.org/wikipedia/commons/d/d8/League_of_Legends_2019_vector.svg",
+      artPosition: "",
+      lastPlayedAt: null,
+      curated: true,
+      featured: true,
+      comingSoon: true,
+      matched: false,
+      isActive: false,
+    },
+    {
+      key: "valorant",
+      name: "Valorant",
+      logoUrl: "https://upload.wikimedia.org/wikipedia/commons/f/fc/Valorant_logo_-_pink_color_version.svg",
+      artPosition: "",
+      lastPlayedAt: null,
+      curated: true,
+      featured: true,
+      comingSoon: true,
+      matched: false,
+      isActive: false,
+    },
+  ];
 
   const genericEntries: LibraryEntry[] = otherOwnedGames.map((owned) => ({
     key: String(owned.appId),
@@ -78,7 +108,7 @@ export default async function DashboardPage() {
       </span>
       <h1 className="mt-1 mb-8 text-3xl font-bold tracking-tight">Dashboard</h1>
 
-      <GameLibraryGrid entries={[...curatedEntries, ...genericEntries]} />
+      <GameLibraryGrid entries={[...curatedEntries, ...comingSoonEntries, ...genericEntries]} />
     </main>
   );
 }

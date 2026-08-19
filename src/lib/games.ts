@@ -12,6 +12,5 @@ export interface GameConfig {
 // in src/lib/cache/patchNotes.ts) — this list is no longer the full set of
 // games the dashboard supports, just the ones with extra personalization.
 export const SUPPORTED_GAMES: GameConfig[] = [
-  { id: "cs2", name: "Counter-Strike 2", steamAppId: 730 },
   { id: "dota2", name: "Dota 2", steamAppId: 570 },
 ];

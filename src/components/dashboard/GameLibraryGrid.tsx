@@ -10,19 +10,33 @@ const CLIP_PATH = "[clip-path:polygon(12px_0,100%_0,100%_calc(100%-12px),calc(10
 export interface LibraryEntry {
   key: string;
   name: string;
-  imageUrl: string;
+  // Absent only for a comingSoon entry, which has no real art to show.
+  imageUrl?: string;
+  // comingSoon entries show this centered (object-contain) instead of
+  // imageUrl - a logo mark, not scene art, so it can't use the same
+  // object-cover crop without stretching.
+  logoUrl?: string;
   // Used if imageUrl 404s (some app ids, e.g. beta/demo builds, have no
   // vertical grid art) - falls back to the landscape header art instead of
   // a broken image.
   fallbackImageUrl?: string;
   artPosition: string;
   lastPlayedAt: Date | null;
+  // Drives the "Deep dive" badge and grouping/sort-first, not card size -
+  // see `featured` for that.
   curated: boolean;
+  // Only the one real, working deep-dive game gets the big spanning hero
+  // treatment - comingSoon placeholders are still `curated` (same badge,
+  // same grouping) but render at normal card size.
+  featured?: boolean;
+  // A curated game that isn't buildable yet (e.g. League/Valorant before
+  // their adapters exist) - renders non-interactively with no real href.
+  comingSoon?: boolean;
   // false = a curated game Steam hasn't confirmed ownership of (existing
   // "preview" fallback) - generic games are always matched by definition,
   // since they only ever come from the real owned-games list.
   matched: boolean;
-  href: string;
+  href?: string;
   isActive: boolean;
 }
 
@@ -137,17 +151,9 @@ export function GameLibraryGrid({ entries }: { entries: LibraryEntry[] }) {
       ) : view === "grid" ? (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
           <AnimatePresence mode="popLayout">
-            {visible.map((entry) => (
-              <motion.div
-                key={entry.key}
-                layout
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.2 }}
-                className={entry.curated ? "col-span-2 row-span-2" : ""}
-              >
-                <Link href={entry.href} className="block h-full">
+            {visible.map((entry) => {
+              const cardBody = (
+                <>
                   {/* Two-layer clip-path frame: a plain `border` doesn't render
                       cleanly along a notched corner (visible gap at the cut),
                       so the "border" is really the outer div's fill color
@@ -155,94 +161,148 @@ export function GameLibraryGrid({ entries }: { entries: LibraryEntry[] }) {
                       for the dashboard's active-card highlight. */}
                   <div
                     className={`h-full p-px transition-colors ${CLIP_PATH} ${
-                      entry.isActive ? "bg-brand" : "bg-border hover:bg-muted-foreground/60"
+                      entry.isActive ? "bg-brand" : entry.comingSoon ? "bg-border" : "bg-border hover:bg-muted-foreground/60"
                     }`}
                   >
-                  <div className={`h-full overflow-hidden bg-card ${CLIP_PATH}`}>
-                    <div className={`relative h-full ${entry.curated ? "aspect-16/10" : "aspect-2/3"}`}>
-                      <img
-                        src={entry.imageUrl}
-                        alt=""
-                        onError={(e) => {
-                          if (entry.fallbackImageUrl) {
-                            e.currentTarget.onerror = null;
-                            e.currentTarget.src = entry.fallbackImageUrl;
-                          }
-                        }}
-                        className={`size-full object-cover ${entry.artPosition} ${entry.matched ? "" : "opacity-60 grayscale"}`}
-                      />
-                      <div className="absolute inset-0 bg-linear-to-t from-background/95 via-transparent to-transparent" />
-                      {entry.curated && (
-                        <span className="absolute left-2 top-2 bg-brand px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wide text-brand-foreground">
-                          Deep dive
-                        </span>
-                      )}
-                      {entry.isActive && (
-                        <span className="absolute right-2 top-2 rounded-full bg-brand px-2 py-0.5 font-mono text-[9px] uppercase tracking-wide text-brand-foreground">
-                          {entry.matched ? "Viewing" : "Previewing"}
-                        </span>
-                      )}
-                      <div className="absolute inset-x-2 bottom-2">
-                        <p className="truncate text-sm font-semibold">{entry.name}</p>
-                        <p className="truncate text-xs text-muted-foreground">
-                          {entry.matched
-                            ? entry.lastPlayedAt
-                              ? `last played ${sincePhrase(entry.lastPlayedAt)}`
-                              : ""
-                            : "not linked — preview"}
-                        </p>
+                    <div className={`h-full overflow-hidden bg-card ${CLIP_PATH}`}>
+                      <div className={`relative h-full ${entry.featured ? "aspect-16/10" : "aspect-2/3"}`}>
+                        {entry.imageUrl ? (
+                          <img
+                            src={entry.imageUrl}
+                            alt=""
+                            onError={(e) => {
+                              if (entry.fallbackImageUrl) {
+                                e.currentTarget.onerror = null;
+                                e.currentTarget.src = entry.fallbackImageUrl;
+                              }
+                            }}
+                            className={`size-full object-cover ${entry.artPosition} ${entry.matched ? "" : "opacity-60 grayscale"}`}
+                          />
+                        ) : (
+                          <div className="flex size-full items-center justify-center bg-muted">
+                            {entry.logoUrl && (
+                              <img
+                                src={entry.logoUrl}
+                                alt=""
+                                className={`object-contain opacity-80 ${entry.featured ? "w-2/5 max-w-40" : "w-1/2 max-w-20"}`}
+                              />
+                            )}
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-linear-to-t from-background/95 via-transparent to-transparent" />
+                        {entry.curated && (
+                          <span className="absolute left-2 top-2 bg-brand px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wide text-brand-foreground">
+                            Deep dive
+                          </span>
+                        )}
+                        {entry.isActive && (
+                          <span className="absolute right-2 top-2 rounded-full bg-brand px-2 py-0.5 font-mono text-[9px] uppercase tracking-wide text-brand-foreground">
+                            {entry.matched ? "Viewing" : "Previewing"}
+                          </span>
+                        )}
+                        <div className="absolute inset-x-2 bottom-2">
+                          <p className="truncate text-sm font-semibold">{entry.name}</p>
+                          <p className="truncate text-xs text-muted-foreground">
+                            {entry.comingSoon
+                              ? "Coming soon"
+                              : entry.matched
+                                ? entry.lastPlayedAt
+                                  ? `last played ${sincePhrase(entry.lastPlayedAt)}`
+                                  : ""
+                                : "not linked — preview"}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
+                </>
+              );
+
+              return (
+                <motion.div
+                  key={entry.key}
+                  layout
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
+                  className={entry.featured ? "col-span-2 row-span-2" : ""}
+                >
+                  {entry.comingSoon ? (
+                    <div className="block h-full cursor-default opacity-70">{cardBody}</div>
+                  ) : (
+                    <Link href={entry.href!} className="block h-full">
+                      {cardBody}
+                    </Link>
+                  )}
+                </motion.div>
+              );
+            })}
           </AnimatePresence>
         </div>
       ) : (
         <div className="divide-y divide-border border border-border">
           <AnimatePresence mode="popLayout">
-            {visible.map((entry) => (
-              <motion.div
-                key={entry.key}
-                layout
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.15 }}
-              >
-                <Link
-                  href={entry.href}
-                  className={`flex items-center gap-3 px-3 py-2 transition-colors ${entry.isActive ? "bg-brand/10" : "hover:bg-muted/50"}`}
-                >
-                  <img
-                    src={entry.imageUrl}
-                    alt=""
-                    onError={(e) => {
-                      if (entry.fallbackImageUrl) {
-                        e.currentTarget.onerror = null;
-                        e.currentTarget.src = entry.fallbackImageUrl;
-                      }
-                    }}
-                    className={`h-10 w-16 shrink-0 rounded-sm object-cover ${entry.artPosition} ${entry.matched ? "" : "opacity-60 grayscale"}`}
-                  />
+            {visible.map((entry) => {
+              const rowBody = (
+                <>
+                  {entry.imageUrl ? (
+                    <img
+                      src={entry.imageUrl}
+                      alt=""
+                      onError={(e) => {
+                        if (entry.fallbackImageUrl) {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = entry.fallbackImageUrl;
+                        }
+                      }}
+                      className={`h-10 w-16 shrink-0 rounded-sm object-cover ${entry.artPosition} ${entry.matched ? "" : "opacity-60 grayscale"}`}
+                    />
+                  ) : (
+                    <div className="flex h-10 w-16 shrink-0 items-center justify-center rounded-sm bg-muted">
+                      {entry.logoUrl && <img src={entry.logoUrl} alt="" className="h-6 w-10 object-contain opacity-80" />}
+                    </div>
+                  )}
                   <span className="flex-1 truncate font-medium">{entry.name}</span>
                   {entry.curated && (
                     <span className="shrink-0 border border-brand/45 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wide text-brand">
                       Deep dive
                     </span>
                   )}
-                  {entry.matched ? (
+                  {entry.comingSoon ? (
+                    <span className="shrink-0 text-sm text-muted-foreground">coming soon</span>
+                  ) : entry.matched ? (
                     entry.lastPlayedAt && (
                       <span className="shrink-0 text-sm text-muted-foreground">last played {sincePhrase(entry.lastPlayedAt)}</span>
                     )
                   ) : (
                     <span className="shrink-0 text-sm text-muted-foreground">not linked — preview</span>
                   )}
-                </Link>
-              </motion.div>
-            ))}
+                </>
+              );
+
+              return (
+                <motion.div
+                  key={entry.key}
+                  layout
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  {entry.comingSoon ? (
+                    <div className="flex cursor-default items-center gap-3 px-3 py-2 opacity-70">{rowBody}</div>
+                  ) : (
+                    <Link
+                      href={entry.href!}
+                      className={`flex items-center gap-3 px-3 py-2 transition-colors ${entry.isActive ? "bg-brand/10" : "hover:bg-muted/50"}`}
+                    >
+                      {rowBody}
+                    </Link>
+                  )}
+                </motion.div>
+              );
+            })}
           </AnimatePresence>
         </div>
       )}

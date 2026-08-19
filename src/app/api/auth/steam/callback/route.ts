@@ -25,6 +25,12 @@ export async function GET(request: Request) {
     asResponse: true,
   });
 
+  const { status } = await sessionResponse.json();
+
+  if (status === "no-account") {
+    return NextResponse.redirect(new URL("/sign-up?steam=required", request.url));
+  }
+
   const response = NextResponse.redirect(new URL("/dashboard", request.url));
   for (const cookie of sessionResponse.headers.getSetCookie()) {
     response.headers.append("set-cookie", cookie);

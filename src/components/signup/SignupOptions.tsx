@@ -1,20 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { authClient } from "@/lib/auth/client";
 
 const CLIP_PATH = "[clip-path:polygon(10px_0,100%_0,100%_calc(100%-10px),calc(100%-10px)_100%,0_100%,0_10px)]";
 
-// Every platform a user can start an account with, rendered as equal peer
-// options in one list - Riot/Battle.net slot in here later without needing
-// to redesign this page. Steam is a plain link (its own OpenID handshake,
-// unrelated to Better Auth's client SDK); future platforms follow the same
-// shape once they exist.
-const CONNECT_OPTIONS = [{ id: "steam", label: "continue_with_steam", href: "/api/auth/steam/login" }];
-
 export function SignupOptions() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const searchParams = useSearchParams();
+  const steamRequired = searchParams.get("steam") === "required";
 
   async function handleEmailSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -33,21 +29,11 @@ export function SignupOptions() {
 
   return (
     <div className="flex flex-col gap-3">
-      {CONNECT_OPTIONS.map((option) => (
-        <a
-          key={option.id}
-          href={option.href}
-          className={`flex items-center justify-center border border-border bg-card px-5 py-3.5 font-mono text-sm font-medium transition-colors hover:border-brand/45 hover:text-brand ${CLIP_PATH}`}
-        >
-          {option.label}
-        </a>
-      ))}
-
-      <div className="flex items-center gap-3 py-1 font-mono text-xs text-muted-foreground">
-        <span className="h-px flex-1 bg-border" />
-        or
-        <span className="h-px flex-1 bg-border" />
-      </div>
+      {steamRequired && (
+        <p className="font-mono text-xs text-muted-foreground before:content-['//_']">
+          create an account first, then connect Steam from settings
+        </p>
+      )}
 
       <form onSubmit={handleEmailSubmit} className="flex flex-col gap-2">
         <input

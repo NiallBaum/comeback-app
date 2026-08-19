@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { SignupOptions } from "@/components/signup/SignupOptions";
 
 export default function SignupPage() {
@@ -8,7 +9,9 @@ export default function SignupPage() {
           // sign up
         </span>
         <h1 className="mt-1 mb-8 text-3xl font-bold tracking-tight">Get started</h1>
-        <SignupOptions />
+        <Suspense fallback={null}>
+          <SignupOptions />
+        </Suspense>
       </div>
     </main>
   );

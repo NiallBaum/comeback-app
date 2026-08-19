@@ -9,7 +9,7 @@ const TIERS = [
     bullets: ["Patch notes for your entire library", "Updates the moment you log back in", "Free. Forever."],
   },
   {
-    tag: "deep dive · poe, dota 2, cs2",
+    tag: "deep dive · dota 2, league, valorant",
     tagColor: "text-brand",
     heading: "Stats and builds, built for you",
     body: "For these three, we go further — your main hero's live stats, meta builds sourced from real match data, and a plain-English recap of whether it's worth jumping back in.",

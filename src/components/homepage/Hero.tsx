@@ -1,6 +1,6 @@
 import { CtaButton } from "@/components/homepage/CtaButton";
 import { SUPPORTED_GAMES } from "@/lib/games";
-import { mockPoeBuilds, mockDota2Builds } from "@/lib/mock/builds";
+import { mockDota2Builds } from "@/lib/mock/builds";
 
 const TRANSCRIPT = [
   { cmd: "$ comeback sync --steam", ok: `247 games, ${SUPPORTED_GAMES.length} supported`, delay: "0.05s" },
@@ -8,7 +8,7 @@ const TRANSCRIPT = [
   { cmd: "$ comeback recommend", ok: "1 build ready", delay: "0.35s" },
 ];
 
-const DIFF_LINES = [mockPoeBuilds[0].whyItWorksNow, mockDota2Builds[0].whyItWorksNow];
+const DIFF_LINES = [mockDota2Builds[0].whyItWorksNow, mockDota2Builds[1].whyItWorksNow];
 
 function SampleBriefingPanel() {
   return (

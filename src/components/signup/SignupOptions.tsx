@@ -11,11 +11,19 @@ export function SignupOptions() {
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const searchParams = useSearchParams();
   const steamRequired = searchParams.get("steam") === "required";
+  // Better Auth's own error-redirect always sets its own `error` code here
+  // (e.g. INVALID_TOKEN) - we don't control or match its exact value, any
+  // presence of it means the link failed.
+  const invalidLink = searchParams.has("error");
 
   async function handleEmailSubmit(e: React.FormEvent) {
     e.preventDefault();
     setStatus("sending");
-    const { error } = await authClient.signIn.magicLink({ email, callbackURL: "/dashboard" });
+    const { error } = await authClient.signIn.magicLink({
+      email,
+      callbackURL: "/dashboard",
+      errorCallbackURL: "/sign-up",
+    });
     setStatus(error ? "error" : "sent");
   }
 
@@ -32,6 +40,12 @@ export function SignupOptions() {
       {steamRequired && (
         <p className="font-mono text-xs text-muted-foreground before:content-['//_']">
           create an account first, then connect Steam from settings
+        </p>
+      )}
+
+      {invalidLink && (
+        <p className="font-mono text-xs text-destructive before:content-['//_']">
+          that link expired or was already used — request a new one below
         </p>
       )}
 

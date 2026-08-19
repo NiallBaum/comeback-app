@@ -22,6 +22,7 @@ export async function GET(request: Request) {
 
   const sessionResponse = await auth.api.signInSteam({
     body: { steamId, personaName, avatarUrl },
+    headers: request.headers,
     asResponse: true,
   });
 

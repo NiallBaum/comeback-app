@@ -36,6 +36,12 @@ export async function Nav() {
               >
                 Dashboard
               </Link>
+              <Link
+                href="/settings"
+                className={buttonVariants({ variant: "ghost", size: "sm" })}
+              >
+                Settings
+              </Link>
               <form action="/api/logout" method="POST">
                 <button type="submit" className={buttonVariants({ variant: "ghost", size: "sm" })}>
                   Sign out

@@ -64,6 +64,25 @@ export function steamSessionPlugin() {
           return ctx.json({ status: "no-account" });
         },
       ),
+
+      disconnectSteam: createAuthEndpoint(
+        "/disconnect/steam",
+        { method: "POST" },
+        async (ctx) => {
+          const currentSession = await getSessionFromCtx(ctx);
+          if (!currentSession) {
+            throw ctx.error("UNAUTHORIZED");
+          }
+
+          await ctx.context.internalAdapter.updateUser(currentSession.user.id, {
+            steamId: null,
+            steamPersonaName: null,
+            steamAvatarUrl: null,
+          });
+
+          return ctx.json({ status: "disconnected" });
+        },
+      ),
     },
   };
 }
